@@ -10,10 +10,15 @@ from kivy.clock import Clock
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.config import Config
 
 import sys
 from downloader_modul import DownloaderOperations, JsonOperations
 
+Config.set('kivy', 'log_level', 'critical')
+Config.set('graphics', 'borderless', 0)
+Config.set('graphics', 'window_state', 'maximized')
+Config.write()
 kv_lay = Builder.load_file('chill_layout.kv')
 
 
@@ -566,6 +571,8 @@ window_manager.add_widget(inst_name_download_layout)
 
 inst_name_result_layout = NameResultLayout(name='name_result_lay')
 window_manager.add_widget(inst_name_result_layout)
+
+Window.maximize()
 
 
 class ChillApp(App):
