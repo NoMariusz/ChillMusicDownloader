@@ -1,0 +1,525 @@
+<Label>:
+    font_name:"Arial"
+
+<MainChillLayout>:
+
+    scroll_float: scroll_float
+    txt_list: txt_list
+
+    load_btn: load_btn
+    new_download_btn: new_download_btn
+    select_songs_btn: select_songs_btn
+    change_song_btn: change_song_btn
+
+    download_progress_float: download_progress_float
+    progress_text: progress_text
+    progress_base: progress_base
+    progress_current: progress_current
+    progress_maked: progress_maked
+
+    FloatLayout:
+
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            id: txt_list
+            text: ''
+            font_size: root.height / 15  if root.width > root.height else root.width / 15
+            pos_hint: {'x': 0.3, 'y': 0.9}
+            size_hint: 0.7, 0.1
+
+        Button:
+            id: load_btn
+            pos_hint: {'x':0.01, 'y': 0.86}
+            size_hint: 0.28, 0.13
+            text:'Load Music'
+            font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.load_songs(load_btn)
+            background_normal:''
+
+        Button:
+            id: new_download_btn
+            pos_hint: {'x':0.01, 'y': 0.71}
+            size_hint: 0.28, 0.13
+            text:'Download All New'
+            font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
+            background_color: 0.6640625, 0.59765625, 0.6171875, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_all_new(new_download_btn)
+            background_normal:''
+
+        Button:
+            id: select_songs_btn
+            pos_hint: {'x':0.01, 'y': 0.56}
+            size_hint: 0.28, 0.13
+            text:'Select Songs'
+            font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
+            background_color: 0.6640625, 0.59765625, 0.6171875, 1
+            border: 16, 16, 10, 1
+            on_release: root.start_selection_songs(select_songs_btn)
+            background_normal:''
+
+        Button:
+            id: change_song_btn
+            pos_hint: {'x':0.01, 'y': 0.41}
+            size_hint: 0.28, 0.13
+            text:'Change Last Download Song'
+            font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.change_last_song(change_song_btn)
+            background_normal:''
+
+        Button:
+            id: return_btn
+            pos_hint: {'x':0.01, 'y': 0.31}
+            size_hint: 0.28, 0.08
+            text:'Return'
+            font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.return_to_menu()
+            background_normal:''
+
+        Button:
+            id: exit_btn
+            pos_hint: {'x':0.01, 'y': 0.21}
+            size_hint: 0.28, 0.08
+            text:'Exit'
+            font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.exit_app()
+            background_normal:''
+
+        FloatLayout:
+            id: scroll_float
+
+            canvas.before:
+                Color:
+                    rgba: 0.01, 0.01, 0.01, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            pos_hint: {'x': 0.3, 'y': 0.3}
+            size_hint: 0.7, 0.6
+
+        FloatLayout:
+            id: color_float_btn
+
+            canvas.before:
+                Color:
+                    rgba: 0.01, 0.01, 0.01, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            pos_hint: {'x': 0.3, 'y': 0.2}
+            size_hint: 0.69, 0.09
+
+        FloatLayout:
+            id: download_progress_float
+
+            canvas.before:
+                Color:
+                    rgba: 0.01, 0.01, 0.01, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            pos_hint: {'x': 0.01, 'y': 0.01}
+            size_hint: 0.98, 0.18
+
+            Label:
+                id: progress_text
+                text: ''
+                font_size: root.height / 35  if root.width > root.height else root.width / 35
+                pos_hint:{'x': 0.2, 'y': 0.6}
+                size_hint: 0.6, 0.35
+
+            FloatLayout:
+                id: progress_base
+
+                canvas.before:
+                    Color:
+                        rgba: 0.8980392156862745, 0.6274509803921569, 0.8588235294117647, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                pos_hint:{'x': 0.2, 'y': 0.01}
+                size_hint: 0, 0
+
+            FloatLayout:
+                id: progress_current
+
+                canvas.before:
+                    Color:
+                        rgba: 0.58203125, 0.44921875, 0.7734375, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                pos_hint:{'x': 0.2, 'y': 0.01}
+                size_hint: 0, 0
+
+            FloatLayout:
+                id: progress_maked
+
+                canvas.before:
+                    Color:
+                        rgba: 0.453125, 0.26953125, 0.67578125, 1
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+                pos_hint:{'x': 0.2, 'y': 0.01}
+                size_hint: 0, 0
+
+
+
+<SongsGrid>:
+    cols: 1
+    spacing: 11
+    size_hint: 1, 3
+
+<PopupChange>:
+
+    txt_input_change: txt_input_change
+    last_song_txt: last_song_txt
+
+    FloatLayout:
+        Label:
+            text:'Current last song:'
+            pos_hint: {"x": 0.05, "y": 0.61}
+            size_hint: 0.44, 0.38
+            font_size: root.height / 20  if root.width > root.height else root.width / 20
+        Label:
+            id: last_song_txt
+            text:''
+            pos_hint: {"x": 0.51, "y": 0.61}
+            size_hint: 0.44, 0.38
+            font_size: root.height / 40  if root.width > root.height else root.width / 40
+        Label:
+            text:'Enter last download song: '
+            pos_hint: {"x": 0.05, "y": 0.21}
+            size_hint: 0.44, 0.38
+            font_size: root.height / 20  if root.width > root.height else root.width / 20
+        TextInput:
+            id:txt_input_change
+            text:'none'
+            pos_hint: {"x": 0.51, "y": 0.21}
+            size_hint: 0.44, 0.38
+            font_size: root.height / 25  if root.width > root.height else root.width / 25
+        Button:
+            text: 'Accept'
+            pos_hint: {"x": 0.06, "y": 0.01}
+            size_hint: 0.38, 0.18
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            background_normal: ''
+            font_size: root.height / 18  if root.width > root.height else root.width / 18
+            on_release: root.if_yes()
+        Button:
+            text: 'Cancel'
+            pos_hint: {"x": 0.56, "y": 0.01}
+            size_hint: 0.38, 0.18
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            background_normal: ''
+            font_size: root.height / 18  if root.width > root.height else root.width / 18
+            on_release: root.if_no()
+
+<MainMenu>:
+
+    FloatLayout:
+        Label:
+            id: logo_label
+            pos_hint:{'x': 0.36, 'y': 0.36}
+            size_hint:0.28, 0.28
+
+            Image:
+                size: logo_label.size
+                pos: logo_label.pos
+                source:'CMDownloader_logo.png'
+        Button:
+            text:'Download From Chanel'
+            font_size: root.height / 44  if root.width > root.height else root.width / 44
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            background_normal: ''
+            pos_hint: {'x':0.1, 'y':0.45}
+            size_hint: 0.25, 0.1
+            on_release: root.go_to_chanel_dwn()
+        Button:
+            text:'Download with address'
+            font_size: root.height / 44  if root.width > root.height else root.width / 44
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            background_normal: ''
+            pos_hint: {'x':0.65, 'y':0.45}
+            size_hint: 0.25, 0.1
+            on_release: root.go_to_address_dwn()
+        Button:
+            text:'Download with name'
+            font_size: root.height / 44  if root.width > root.height else root.width / 44
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            background_normal: ''
+            pos_hint: {'x':0.375, 'y':0.70}
+            size_hint: 0.25, 0.1
+            on_release: root.go_to_name_dwn()
+        Button:
+            id: exit_btn
+            pos_hint: {'x':0.51, 'y': 0.11}
+            size_hint: 0.18, 0.08
+            text:'Exit'
+            font_size: root.height / 35  if root.width > root.height else root.width / 35
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.exit_app()
+            background_normal:''
+        Button:
+            id: options_btn
+            pos_hint: {'x':0.31, 'y': 0.11}
+            size_hint: 0.18, 0.08
+            text:'Options'
+            font_size: root.height / 35  if root.width > root.height else root.width / 35
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.go_to_options()
+            background_normal:''
+
+<OptionsLay>:
+
+    channel_input: channel_input
+    dir_input: dir_input
+    save_btn: save_btn
+
+    FloatLayout:
+
+        Label:
+            text:'Change directory to save music:'
+            font_size: root.height / 30  if root.width > root.height else root.width / 32
+            pos_hint: {'x':0.06, 'y': 0.71}
+            size_hint: 0.38, 0.23
+        TextInput:
+            id:dir_input
+            pos_hint: {'x':0.56, 'y': 0.76}
+            size_hint: 0.38, 0.13
+            text: ''
+            font_size: root.height / 35  if root.width > root.height else root.width / 37
+        Label:
+            text:'Change youtube channel:'
+            font_size: root.height / 30  if root.width > root.height else root.width / 32
+            pos_hint: {'x':0.06, 'y': 0.46}
+            size_hint: 0.38, 0.23
+        TextInput:
+            id:channel_input
+            pos_hint: {'x':0.56, 'y': 0.51}
+            size_hint: 0.38, 0.13
+            text: ''
+            font_size: root.height / 35  if root.width > root.height else root.width / 37
+        Button:
+            id: options_btn
+            pos_hint: {'x':0.21, 'y': 0.01}
+            size_hint: 0.18, 0.08
+            text:'Return'
+            font_size: root.height / 32  if root.width > root.height else root.width / 32
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.go_return()
+            background_normal:''
+        Button:
+            id: save_btn
+            pos_hint: {'x':0.61, 'y': 0.01}
+            size_hint: 0.18, 0.08
+            text:'Save'
+            font_size: root.height / 32  if root.width > root.height else root.width / 32
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.save_options()
+            background_normal:''
+
+<AddressDownloadLayout>:
+    address_input: address_input
+    status_text: status_text
+
+    FloatLayout:
+        Label:
+            text: 'Enter address of youtube video:'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            pos_hint: {'x': 0.06, 'y': 0.71}
+            size_hint: 0.38, 0.18
+        TextInput:
+            id: address_input
+            text: ''
+            font_size: root.height / 20  if root.width > root.height else root.width / 20
+            pos_hint: {'x': 0.51, 'y': 0.71}
+            size_hint: 0.38, 0.18
+        Button:
+            pos_hint: {'x':0.31, 'y': 0.46}
+            size_hint: 0.38, 0.13
+            text:'Download'
+            font_size: root.height / 15  if root.width > root.height else root.width / 15
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_address()
+            background_normal:''
+        Button:
+            text: 'Return'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            pos_hint: {'x':0.06, 'y': 0.06}
+            size_hint: 0.28, 0.08
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.go_return()
+            background_normal:''
+        Label:
+            id: status_text
+            text: ''
+            font_size: root.height / 12  if root.width > root.height else root.width / 12
+            color: 0, 0, 0, 1
+            pos_hint: {'x': 0.2, 'y':0.2}
+            size_hint: 0, 0
+            canvas.before:
+                Color:
+                    rgba: 0.97265625, 0.9453125, 0.9609375, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+<NameDownloadLayout>:
+    name_input: name_input
+    text_label: text_label
+    check_btn: check_btn
+
+    FloatLayout:
+        Label:
+            text: 'Enter name of youtube video:'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            pos_hint: {'x': 0.06, 'y': 0.71}
+            size_hint: 0.38, 0.18
+            id: text_label
+        TextInput:
+            id: name_input
+            text: ''
+            font_size: root.height / 20  if root.width > root.height else root.width / 20
+            pos_hint: {'x': 0.51, 'y': 0.71}
+            size_hint: 0.38, 0.18
+        Button:
+            pos_hint: {'x':0.31, 'y': 0.46}
+            size_hint: 0.38, 0.13
+            text:'Check'
+            font_size: root.height / 15  if root.width > root.height else root.width / 15
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_by_name()
+            background_normal:''
+            id: check_btn
+        Button:
+            text: 'Return'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            pos_hint: {'x':0.06, 'y': 0.06}
+            size_hint: 0.28, 0.08
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.go_return()
+            background_normal:''
+
+<NameResultLayout>:
+    song1_name: song1_name
+    song2_name: song2_name
+    song3_name: song3_name
+    song4_name: song4_name
+    song5_name: song5_name
+    status_label: status_label
+
+    Label:
+        text: 'Select Video:'
+        font_size: root.height / 30  if root.width > root.height else root.width / 30
+        pos_hint: {'x': 0.1, 'y': 0.86}
+        size_hint: 0.8, 0.13
+        id: status_label
+
+    GridLayout:
+        pos_hint: {'x': 0.1, 'y': 0.16}
+        size_hint: 0.8, 0.68
+
+        cols:2
+        spacing: 10
+
+        Label:
+            id: song1_name
+            text: ''
+            font_size: root.height / 62  if root.width > root.height else root.width / 62
+        Button:
+            id: download_button1
+            text: 'Download'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_music(0)
+            background_normal:''
+        Label:
+            id: song2_name
+            text: ''
+            font_size: root.height / 62  if root.width > root.height else root.width / 62
+        Button:
+            id: download_button2
+            text: 'Download'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_music(1)
+            background_normal:''
+        Label:
+            id: song3_name
+            text: ''
+            font_size: root.height / 62  if root.width > root.height else root.width / 62
+        Button:
+            id: download_button3
+            text: 'Download'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_music(2)
+            background_normal:''
+        Label:
+            id: song4_name
+            text: ''
+            font_size: root.height / 62  if root.width > root.height else root.width / 62
+        Button:
+            id: download_button4
+            text: 'Download'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_music(3)
+            background_normal:''
+        Label:
+            id: song5_name
+            text: ''
+            font_size: root.height / 62  if root.width > root.height else root.width / 62
+        Button:
+            id: download_button5
+            text: 'Download'
+            font_size: root.height / 30  if root.width > root.height else root.width / 30
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.download_music(4)
+            background_normal:''
+    Button:
+        text: 'Return'
+        font_size: root.height / 30  if root.width > root.height else root.width / 30
+        pos_hint: {'x':0.06, 'y': 0.06}
+        size_hint: 0.28, 0.08
+        background_color: 0.81640625, 0.3125, 0.43359375, 1
+        border: 16, 16, 10, 1
+        on_release: root.go_return()
+        background_normal:''
+
+
