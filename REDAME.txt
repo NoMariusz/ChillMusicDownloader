@@ -1,0 +1,11 @@
+Chill Music Downloader is python music from youtube downloader
+
+Python Modules:
+	-requests v2.22.0
+	-BeautifulSoup v4.8.2
+	-youtube_dl v2020.1.24
+	-kivy v1.11.1
+
+*To correct play you must also have ffmpeg.exe
+
+Program download .mp3 file to destiontion folder from youtube.com, by address, name of song, or name of last download song from gived channel
