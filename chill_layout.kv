@@ -249,7 +249,7 @@
                 pos: logo_label.pos
                 source:'CMDownloader_logo.png'
         Button:
-            text:'Download From Chanel'
+            text:'Download From Channel'
             font_size: root.height / 44  if root.width > root.height else root.width / 44
             background_color: 0.81640625, 0.3125, 0.43359375, 1
             background_normal: ''
@@ -297,6 +297,7 @@
 
     channel_input: channel_input
     dir_input: dir_input
+    file_type_input: file_type_input
     save_btn: save_btn
 
     FloatLayout:
@@ -320,6 +321,17 @@
         TextInput:
             id:channel_input
             pos_hint: {'x':0.56, 'y': 0.51}
+            size_hint: 0.38, 0.13
+            text: ''
+            font_size: root.height / 35  if root.width > root.height else root.width / 37
+        Label:
+            text:'Change file type:'
+            font_size: root.height / 30  if root.width > root.height else root.width / 32
+            pos_hint: {'x':0.06, 'y': 0.21}
+            size_hint: 0.38, 0.23
+        TextInput:
+            id:file_type_input
+            pos_hint: {'x':0.56, 'y': 0.26}
             size_hint: 0.38, 0.13
             text: ''
             font_size: root.height / 35  if root.width > root.height else root.width / 37
@@ -382,12 +394,12 @@
             id: status_text
             text: ''
             font_size: root.height / 12  if root.width > root.height else root.width / 12
-            color: 0, 0, 0, 1
+            color: 1, 1, 1, 1
             pos_hint: {'x': 0.2, 'y':0.2}
             size_hint: 0, 0
             canvas.before:
                 Color:
-                    rgba: 0.97265625, 0.9453125, 0.9609375, 1
+                    rgba: 0.01, 0.01, 0.01, 1
                 Rectangle:
                     pos: self.pos
                     size: self.size

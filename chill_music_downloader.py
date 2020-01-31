@@ -15,7 +15,8 @@ from kivy.config import Config
 import sys
 from downloader_modul import DownloaderOperations, JsonOperations
 
-Config.set('kivy', 'log_level', 'critical')
+Config.set('kivy', 'log_level', 'info')
+# Config.set('kivy', 'log_level', 'critical')
 Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'window_state', 'maximized')
 Config.write()
@@ -107,7 +108,7 @@ class MainChillLayout(Screen):
             inst_change.txt_input_change.text = self.last_track
             inst_change.last_song_txt.text = self.last_track
             self.poopup_window = Popup(title="Change last download song", content=inst_change, size_hint=(None, None),
-                                       size=(self.height / 1.00001, self.height / 1.1))
+                                       size=(self.width / 1.5, self.height / 1.1), separator_color=[0.453125, 0.26953125, 0.67578125, 1])
             self.poopup_window.open()
 
     def return_to_menu(self):
@@ -373,15 +374,11 @@ class MainMenu(Screen):
         window_manager.transition.direction = 'down'
         window_manager.current = 'name_dwn_lay'
 
-    def go_to_options(self):
+    @staticmethod
+    def go_to_options():
         window_manager.transition.direction = 'up'
         window_manager.current = 'options_lay'
-        self.make_options()
-
-    @staticmethod
-    def make_options():
-        inst_options.dir_input.text = DownloaderOperations.get_config('save_path')
-        inst_options.channel_input.text = DownloaderOperations.get_config('channel')
+        inst_options.make_options()
 
     @staticmethod
     def exit_app():
@@ -392,6 +389,7 @@ class OptionsLay(Screen):
     """ layout zawierający możliwość zmainy opcji, czyli ścieżki pobierania narazie """
     save_btn = ObjectProperty(None)
     dir_input = ObjectProperty(None)
+    file_type_input = ObjectProperty(None)
     channel_input = ObjectProperty(None)
 
     @staticmethod
@@ -404,6 +402,11 @@ class OptionsLay(Screen):
         options_dict = JsonOperations.load_json('config.json')
 
         options_dict['save_path'] = self.dir_input.text
+        if self.check_file_type(self.file_type_input.text):
+            options_dict['file_type'] = self.file_type_input.text
+        else:
+            self.notvalid_option_popup('Chose valid file type!\nSupported types: \naac, m4a, mp3, wav')
+
         self.check_channel_options(self.channel_input.text)
         if options_dict['channel'] != self.channel_input.text:
             self.block_on_change_channel()
@@ -416,6 +419,23 @@ class OptionsLay(Screen):
 
     def change_text_save_btn(self, delta_time):
         self.save_btn.text = 'Save'
+
+    @staticmethod
+    def check_file_type(text):
+        if text in ['aac', 'm4a', 'mp3', 'wav']:
+            return True
+        else:
+            return False
+
+    def notvalid_option_popup(self, text):
+        show = Label(text=text, font_size=self.height / 20 if self.width > self.height else self.width / 20)
+        self.popup_window = Popup(title='Error', content=show, size_hint=(None, None), size=(self.width / 2, self.height / 1.5),
+                             separator_color=[0.453125, 0.26953125, 0.67578125, 1])
+        self.popup_window.open()
+        Clock.schedule_once(self.notvalid_option_popup2, 1.5)
+
+    def notvalid_option_popup2(self, delta_time):
+        self.popup_window.dismiss()
 
     @staticmethod
     def check_channel_options(new_channel):
@@ -431,6 +451,12 @@ class OptionsLay(Screen):
         inst_main_chill_layout.clear_scroll()
         inst_main_chill_layout.un_or_block_btn(list_btn_to_block=[inst_main_chill_layout.new_download_btn, inst_main_chill_layout.select_songs_btn], block=True)
 
+    def make_options(self):
+        conf_dict = DownloaderOperations.get_all_config()
+        self.dir_input.text = conf_dict['save_path']
+        self.channel_input.text = conf_dict['channel']
+        self.file_type_input.text = conf_dict['file_type']
+
 
 class AddressDownloadLayout(Screen):
     """ umożliwia pobranie fimu z yt bezpośrednio po adresie, jeśli adres będzie nipoprawny to wyskoczy błąd """
@@ -445,21 +471,19 @@ class AddressDownloadLayout(Screen):
     def download_address(self):
         """ pobiera dany adres """
         self.status_text.size_hint = (0.6, 0.2)
-        self.status_text.text = 'Downloading'
+        self.status_text.text = 'Status: Downloading'
         Clock.schedule_once(self.download_address1, 0)
 
     def download_address1(self, delta_time):
         """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
-        ydl = DownloaderOperations.get_download_object(DownloaderOperations())
-        try:
-            ydl.download([self.address_input.text])
-            self.status_text.text = 'Downloaded'
-        except AttributeError:
-            self.status_text.text = "Can't connect"
+        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.address_input.text)
+        self.status_text.text = status
         Clock.schedule_once(self.download_address2, 1)
 
     def download_address2(self, delta_time):
         self.status_text.size_hint = (0, 0)
+        self.status_text.text = ""
+        self.address_input.text = ""
 
 
 class NameDownloadLayout(Screen):
@@ -518,7 +542,7 @@ class NameResultLayout(Screen):
         """ pobiera kawałek o takim numerze w słowniku jak instance czyli numer guzika """
         if self.result_dict != {"Error: Can't connect to this yt channel": 'Error'}:
             self.download_address = self.get_download_address(instance)
-            self.status_label.text = 'Downloading'
+            self.status_label.text = 'Status: Downloading'
             self.download_music1()
 
     def get_download_address(self, btn_instance):
@@ -529,16 +553,13 @@ class NameResultLayout(Screen):
 
     def download_address1(self, delta_time):
         """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
-        ydl = DownloaderOperations.get_download_object(DownloaderOperations())
-        try:
-            ydl.download([self.download_address])
-        except AttributeError:
-            self.status_label.text = "Can't connect"
-        self.status_label.text = 'Downloaded'
+        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.download_address)
+        self.status_label.text = status
         Clock.schedule_once(self.download_address2, 1)
 
     def download_address2(self, delta_time):
         Clock.schedule_once(self.download_address3, 1)
+        self.status_label.text = "Status: Downloaded"
 
     def download_address3(self, delta_time):
         window_manager.transition.direction = 'right'
