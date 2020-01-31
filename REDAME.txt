@@ -9,3 +9,8 @@ Python Modules:
 *To correct play you must also have ffmpeg.exe
 
 Program download .mp3 file to destiontion folder from youtube.com, by address, name of song, or name of last download song from gived channel
+
+Update:
+	-Red dots Fixed
+	-Dropdown select file extension
+	-Download thread added

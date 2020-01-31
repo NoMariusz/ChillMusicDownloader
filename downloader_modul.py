@@ -42,7 +42,7 @@ class DownloaderOperations(object):
 
     def download_music(self, name, url):
         """ Kompleksowo pobiera utwór i zapisuje go do bazy jako ostatnio pobrany """
-        status = self.ytdl_download(url)
+        _ = self.ytdl_download(url)
         JsonOperations.save_last_track(self.inst_jo, name)
 
     def ytdl_download(self, url):

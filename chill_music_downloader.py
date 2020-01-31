@@ -5,6 +5,7 @@ from kivy.properties import ObjectProperty
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 from kivy.uix.popup import Popup
+from kivy.uix.dropdown import DropDown
 from kivy.clock import Clock
 
 from kivy.uix.gridlayout import GridLayout
@@ -15,10 +16,12 @@ from kivy.config import Config
 import sys
 from downloader_modul import DownloaderOperations, JsonOperations
 
-Config.set('kivy', 'log_level', 'info')
-# Config.set('kivy', 'log_level', 'critical')
+# Config.set('kivy', 'log_level', 'info')
+Config.set('kivy', 'log_level', 'critical')
 Config.set('graphics', 'borderless', 0)
-Config.set('graphics', 'window_state', 'maximized')
+Config.set('graphics', 'window_state', 'minimized')
+# Config.set('graphics', 'window_state',  "visible")
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.write()
 kv_lay = Builder.load_file('chill_layout.kv')
 
@@ -389,8 +392,12 @@ class OptionsLay(Screen):
     """ layout zawierający możliwość zmainy opcji, czyli ścieżki pobierania narazie """
     save_btn = ObjectProperty(None)
     dir_input = ObjectProperty(None)
-    file_type_input = ObjectProperty(None)
     channel_input = ObjectProperty(None)
+    change_file_type_dropdown_main_btn = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(OptionsLay, self).__init__(**kwargs)
+        self.maked_dropdown = False
 
     @staticmethod
     def go_return():
@@ -402,10 +409,7 @@ class OptionsLay(Screen):
         options_dict = JsonOperations.load_json('config.json')
 
         options_dict['save_path'] = self.dir_input.text
-        if self.check_file_type(self.file_type_input.text):
-            options_dict['file_type'] = self.file_type_input.text
-        else:
-            self.notvalid_option_popup('Chose valid file type!\nSupported types: \naac, m4a, mp3, wav')
+        options_dict['file_type'] = self.change_file_type_dropdown_main_btn.text
 
         self.check_channel_options(self.channel_input.text)
         if options_dict['channel'] != self.channel_input.text:
@@ -419,23 +423,6 @@ class OptionsLay(Screen):
 
     def change_text_save_btn(self, delta_time):
         self.save_btn.text = 'Save'
-
-    @staticmethod
-    def check_file_type(text):
-        if text in ['aac', 'm4a', 'mp3', 'wav']:
-            return True
-        else:
-            return False
-
-    def notvalid_option_popup(self, text):
-        show = Label(text=text, font_size=self.height / 20 if self.width > self.height else self.width / 20)
-        self.popup_window = Popup(title='Error', content=show, size_hint=(None, None), size=(self.width / 2, self.height / 1.5),
-                             separator_color=[0.453125, 0.26953125, 0.67578125, 1])
-        self.popup_window.open()
-        Clock.schedule_once(self.notvalid_option_popup2, 1.5)
-
-    def notvalid_option_popup2(self, delta_time):
-        self.popup_window.dismiss()
 
     @staticmethod
     def check_channel_options(new_channel):
@@ -455,7 +442,25 @@ class OptionsLay(Screen):
         conf_dict = DownloaderOperations.get_all_config()
         self.dir_input.text = conf_dict['save_path']
         self.channel_input.text = conf_dict['channel']
-        self.file_type_input.text = conf_dict['file_type']
+        self.change_file_type_dropdown_main_btn.text = conf_dict['file_type']
+        if not self.maked_dropdown:
+            self.make_dropdown()
+
+    def make_dropdown(self):
+        self.dropdown = DropDown()
+        self.dropdown.dismiss_on_select = False
+        for ft_name in ['aac', 'm4a', 'mp3', 'wav']:
+            dd_btn = Button(text=ft_name, size_hint_y=None, height=50, background_normal='', border=(16, 16, 16, 16),
+                            background_color=[0.81640625, 0.3125, 0.43359375, 1])
+            dd_btn.bind(on_release=self.release_dropdown_button)
+            self.dropdown.add_widget(dd_btn)
+        self.change_file_type_dropdown_main_btn.bind(on_release=self.dropdown.open)
+        self.dropdown.bind(on_select=lambda instance, dd_main_text: setattr(self.change_file_type_dropdown_main_btn, 'text', dd_main_text))
+        self.maked_dropdown = True
+
+    def release_dropdown_button(self, instance):
+        self.dropdown.select(instance.text)
+        self.dropdown.dismiss()
 
 
 class AddressDownloadLayout(Screen):

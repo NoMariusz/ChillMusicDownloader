@@ -297,7 +297,7 @@
 
     channel_input: channel_input
     dir_input: dir_input
-    file_type_input: file_type_input
+    change_file_type_dropdown_main_btn: change_file_type_dropdown_main_btn
     save_btn: save_btn
 
     FloatLayout:
@@ -329,12 +329,15 @@
             font_size: root.height / 30  if root.width > root.height else root.width / 32
             pos_hint: {'x':0.06, 'y': 0.21}
             size_hint: 0.38, 0.23
-        TextInput:
-            id:file_type_input
-            pos_hint: {'x':0.56, 'y': 0.26}
-            size_hint: 0.38, 0.13
+        Button:
+            id: change_file_type_dropdown_main_btn
+            pos_hint: {'x':0.60, 'y': 0.27}
+            size_hint: 0.30, 0.11
             text: ''
             font_size: root.height / 35  if root.width > root.height else root.width / 37
+            background_normal:''
+            background_color: [0.453125, 0.26953125, 0.67578125, 1]
+            border: 16, 16, 10, 1
         Button:
             id: options_btn
             pos_hint: {'x':0.21, 'y': 0.01}
