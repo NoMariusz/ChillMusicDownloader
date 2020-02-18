@@ -10,6 +10,8 @@
     new_download_btn: new_download_btn
     select_songs_btn: select_songs_btn
     change_song_btn: change_song_btn
+    return_btn: return_btn
+    exit_btn: exit_btn
 
     download_progress_float: download_progress_float
     progress_text: progress_text
@@ -85,7 +87,7 @@
             font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
             background_color: 0.81640625, 0.3125, 0.43359375, 1
             border: 16, 16, 10, 1
-            on_release: root.return_to_menu()
+            on_release: root.return_to_menu(return_btn)
             background_normal:''
 
         Button:
@@ -96,7 +98,7 @@
             font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
             background_color: 0.81640625, 0.3125, 0.43359375, 1
             border: 16, 16, 10, 1
-            on_release: root.exit_app()
+            on_release: root.exit_app(exit_btn)
             background_normal:''
 
         FloatLayout:
@@ -362,6 +364,8 @@
 <AddressDownloadLayout>:
     address_input: address_input
     status_text: status_text
+    return_btn: return_btn
+    download_btn: download_btn
 
     FloatLayout:
         Label:
@@ -376,6 +380,7 @@
             pos_hint: {'x': 0.51, 'y': 0.71}
             size_hint: 0.38, 0.18
         Button:
+            id: download_btn
             pos_hint: {'x':0.31, 'y': 0.46}
             size_hint: 0.38, 0.13
             text:'Download'
@@ -385,6 +390,7 @@
             on_release: root.download_address()
             background_normal:''
         Button:
+            id: return_btn
             text: 'Return'
             font_size: root.height / 30  if root.width > root.height else root.width / 30
             pos_hint: {'x':0.06, 'y': 0.06}
@@ -452,6 +458,13 @@
     song4_name: song4_name
     song5_name: song5_name
     status_label: status_label
+
+    return_btn: return_btn
+    download_button1: download_button1
+    download_button2: download_button2
+    download_button3: download_button3
+    download_button4: download_button4
+    download_button5: download_button5
 
     Label:
         text: 'Select Video:'
@@ -528,6 +541,7 @@
             on_release: root.download_music(4)
             background_normal:''
     Button:
+        id: return_btn
         text: 'Return'
         font_size: root.height / 30  if root.width > root.height else root.width / 30
         pos_hint: {'x':0.06, 'y': 0.06}

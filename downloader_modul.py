@@ -27,7 +27,7 @@ class DownloaderOperations(object):
         for tag in pagebs.find_all("a", class_="yt-uix-sessionlink yt-uix-tile-link spf-link yt-ui-ellipsis yt-ui-ellipsis-2"):
             if tag.get_text() == last_track:
                 url_dict["↑ New, ↓ Old"] = None
-            print(tag.get_text())           # do usuniecia <-<-<---------------------------------------
+            # print(tag.get_text())
             url_dict[tag.get_text()] = self.urll(tag.get("href"))
 
         if url_dict == {}:
@@ -40,19 +40,19 @@ class DownloaderOperations(object):
         u = "https://www.youtube.com" + href
         return u
 
-    def download_music(self, name, url):
+    def download_music(self, name, url, cause_inst=None):
         """ Kompleksowo pobiera utwór i zapisuje go do bazy jako ostatnio pobrany """
-        _ = self.ytdl_download(url)
+        _ = self.ytdl_download(url, cause_inst)
         JsonOperations.save_last_track(self.inst_jo, name)
 
-    def ytdl_download(self, url):
+    def ytdl_download(self, url, cause_inst=None):
         """ pobiera jeden utwór o podanym url """
         ydl = self.get_download_object()
         try:
-            dwn_thread = DownloadThread(ydl, url)
+            dwn_thread = DownloadThread(ydl, url, cause_inst)
             dwn_thread.start()
-            dwn_thread.join()
-            return "Status: Downloaded"
+            #dwn_thread.join()
+            return "Status: Downloading"
         except AttributeError:
             return "Status: Error"
 
@@ -127,13 +127,16 @@ class DownloaderOperations(object):
 
 class DownloadThread(threading.Thread):
 
-    def __init__(self, ytdl_object, url, **kwargs):
+    def __init__(self, ytdl_object, url, cause_inst, **kwargs):
         super(DownloadThread, self).__init__(**kwargs)
         self.ytdl_object = ytdl_object
         self.url = url
+        self.cause_inst = cause_inst
 
     def run(self):
         self.ytdl_object.download([self.url])
+        if self.cause_inst:     # wywołuje jeśli jest jakać instancja a nie jest pusta
+            self.cause_inst.end_thread_download()
 
 
 class JsonOperations(object):

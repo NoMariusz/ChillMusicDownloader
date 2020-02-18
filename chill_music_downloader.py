@@ -16,8 +16,8 @@ from kivy.config import Config
 import sys
 from downloader_modul import DownloaderOperations, JsonOperations
 
-# Config.set('kivy', 'log_level', 'info')
-Config.set('kivy', 'log_level', 'critical')
+Config.set('kivy', 'log_level', 'info')
+# Config.set('kivy', 'log_level', 'critical')
 Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'window_state', 'minimized')
 # Config.set('graphics', 'window_state',  "visible")
@@ -35,6 +35,8 @@ class MainChillLayout(Screen):
     new_download_btn = ObjectProperty(None)
     select_songs_btn = ObjectProperty(None)
     change_song_btn = ObjectProperty(None)
+    return_btn = ObjectProperty(None)
+    exit_btn = ObjectProperty(None)
 
     download_progress_float = ObjectProperty(None)
     progress_text = ObjectProperty(None)
@@ -114,45 +116,51 @@ class MainChillLayout(Screen):
                                        size=(self.width / 1.5, self.height / 1.1), separator_color=[0.453125, 0.26953125, 0.67578125, 1])
             self.poopup_window.open()
 
-    def return_to_menu(self):
-        window_manager.transition.direction = 'left'
-        window_manager.current = 'menu_lay'
+    def return_to_menu(self, instance):
+        if instance.background_color == [0.81640625, 0.3125, 0.43359375, 1]:
+            window_manager.transition.direction = 'left'
+            window_manager.current = 'menu_lay'
 
     @staticmethod
-    def exit_app():
-        sys.exit()
+    def exit_app(instance):
+        if instance.background_color == [0.81640625, 0.3125, 0.43359375, 1]:
+            sys.exit()
 
     def download_music(self, dwn_dict):
         """ odpowiada za całe pobieranie, tworzy pasek postępu, blokuje guziki na czas pobierania, pobiera piosenki z
         listy w pętli, opartej na odwoływaniu sie w zegarze """
         self.make_progress_bar()
-        self.un_or_block_btn(list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn], block=True)
+        self.un_or_block_btn(list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn, self.return_btn, self.exit_btn], block=True)
         self.dwn_iter = 1
         self.len_dict = len(dwn_dict)
         self.dwn_dict = dwn_dict
-        self.make_dwn_grphs()
+        #self.make_dwn_grphs()
+        self.clear_scroll()
+        self.scroll_float.add_widget(Label(text="Please wait for end downloading",
+                                           font_size=self.height / 29 if self.width > self.height else self.width / 29,
+                                     pos_hint={"x": 0.2, "y": 0.4}, size_hint=(0.6, 0.2)))
         Clock.schedule_once(self.call_to_dwn_more, 0)
 
     def call_to_dwn_more(self, x):
         """ funkcja która pobiera dany kawałek, odpowiednio modyfikując pasek postępu, lub kończy pobieranie sprzątjąc
         layout"""
         if self.dwn_iter < self.len_dict+1:
+            self.make_dwn_grphs()
             self.download_song_with_ytdl()
             self.dwn_iter += 1
-            self.make_dwn_grphs()
-            self.call_to_call_tdm()
+            #self.call_to_call_tdm()
         elif self.dwn_iter == self.len_dict+1:
             self.download_music_end()
 
-    def call_to_call_tdm(self):
-        Clock.schedule_once(self.call_to_dwn_more, 0.5)
-        print(self.progress_text.text)
+    def end_thread_download(self):
+        Clock.schedule_once(self.call_to_dwn_more, 0)
+        # print(self.progress_text.text)
 
     def download_song_with_ytdl(self):
         """ funkcja która wysyła dany kawałek zgodnie z kolejnością pobierania do objektu pobierającego"""
         url = list(self.dwn_dict.values())[self.dwn_iter - 1]
         name = list(self.dwn_dict.keys())[self.dwn_iter - 1]
-        DownloaderOperations.download_music(self.inst_do, name=name, url=url)
+        DownloaderOperations.download_music(self.inst_do, name=name, url=url, cause_inst=self)
 
     def make_dwn_grphs(self):
         """ tworzy pasek pobierania zgodnie ze zmiennymi towarzyszącymi pobieraniu """
@@ -164,6 +172,7 @@ class MainChillLayout(Screen):
     def download_music_end(self):
         """ czyści pasek aktualnego pobrania, wyświetla napis i odwołuje sie do fukcji czyśczącej dolny pasek """
         self.progress_text.text = 'Downloaded'
+        self.clear_scroll()
         self.progress_current.size_hint = (0, 0)
         Clock.schedule_once(self.download_music_end1, 0.8)
 
@@ -171,7 +180,7 @@ class MainChillLayout(Screen):
         """ Czyści pasek z pobieraniem, zdjemuje blokady na guzikach pobierania """
         self.progress_text.text = ''
         self.un_or_block_btn(
-            list_btn_to_block=[self.load_btn, self.change_song_btn],
+            list_btn_to_block=[self.load_btn, self.change_song_btn, self.return_btn, self.exit_btn],
             block=False)
         self.progress_base.size_hint = (0, 0)
         self.progress_maked.size_hint = (0, 0)
@@ -467,28 +476,43 @@ class AddressDownloadLayout(Screen):
     """ umożliwia pobranie fimu z yt bezpośrednio po adresie, jeśli adres będzie nipoprawny to wyskoczy błąd """
     address_input = ObjectProperty(None)
     status_text = ObjectProperty(None)
+    download_btn = ObjectProperty(None)
+    return_btn = ObjectProperty(None)
+    dwn_lock = False
 
-    @staticmethod
-    def go_return():
-        window_manager.transition.direction = 'right'
-        window_manager.current = 'menu_lay'
+    def go_return(self):
+        if not self.dwn_lock:
+            window_manager.transition.direction = 'right'
+            window_manager.current = 'menu_lay'
 
     def download_address(self):
         """ pobiera dany adres """
-        self.status_text.size_hint = (0.6, 0.2)
-        self.status_text.text = 'Status: Downloading'
-        Clock.schedule_once(self.download_address1, 0)
+        if not self.dwn_lock:
+            self.edit_lock_dwn(True)
+            self.status_text.size_hint = (0.6, 0.2)
+            self.status_text.text = 'Status: Downloading'
+            Clock.schedule_once(self.download_address1, 0)
 
     def download_address1(self, delta_time):
         """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
-        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.address_input.text)
+        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.address_input.text, self)
         self.status_text.text = status
-        Clock.schedule_once(self.download_address2, 1)
 
-    def download_address2(self, delta_time):
+    def end_thread_download(self):
         self.status_text.size_hint = (0, 0)
         self.status_text.text = ""
         self.address_input.text = ""
+        self.edit_lock_dwn(False)
+
+    def edit_lock_dwn(self, lock):
+        if lock:
+            self.dwn_lock = True
+            self.return_btn.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+            self.download_btn.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+        else:
+            self.dwn_lock = False
+            self.return_btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+            self.download_btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]
 
 
 class NameDownloadLayout(Screen):
@@ -530,14 +554,23 @@ class NameResultLayout(Screen):
     song5_name = ObjectProperty(None)
     status_label = ObjectProperty(None)
 
-    @staticmethod
-    def go_return():
+    return_btn = ObjectProperty(None)
+    download_button1 = ObjectProperty(None)
+    download_button2 = ObjectProperty(None)
+    download_button3 = ObjectProperty(None)
+    download_button4 = ObjectProperty(None)
+    download_button5 = ObjectProperty(None)
+    dwn_lock = False
+
+    def go_return(self):
         """ wraca do menu """
-        window_manager.transition.direction = 'right'
-        window_manager.current = 'name_dwn_lay'
+        if not self.dwn_lock:
+            window_manager.transition.direction = 'right'
+            window_manager.current = 'name_dwn_lay'
 
     def load_songs_to_grid(self, result_dict):
         """ służy do załadowania nazw utworów do listy pobierania, z result_dict """
+        self.edit_dwn_lock(False)
         self.result_dict = result_dict
         label_list = [self.song1_name, self.song2_name, self.song3_name, self.song4_name, self.song5_name]
         for x, y in enumerate(result_dict.keys()):
@@ -545,31 +578,54 @@ class NameResultLayout(Screen):
 
     def download_music(self, instance):
         """ pobiera kawałek o takim numerze w słowniku jak instance czyli numer guzika """
-        if self.result_dict != {"Error: Can't connect to this yt channel": 'Error'}:
+        if (self.result_dict != {"Error: Can't connect to this yt channel": 'Error'}) and (not self.dwn_lock):
+            self.edit_dwn_lock(True)
             self.download_address = self.get_download_address(instance)
-            self.status_label.text = 'Status: Downloading'
+            self.status_label.text = 'Status: Downloading %s' % (self.get_download_name(instance))
             self.download_music1()
 
     def get_download_address(self, btn_instance):
         return list(self.result_dict.values())[btn_instance]
+
+    def get_download_name(self, btn_instance):
+        return list(self.result_dict.keys())[btn_instance]
 
     def download_music1(self):
         Clock.schedule_once(self.download_address1, 0)
 
     def download_address1(self, delta_time):
         """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
-        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.download_address)
-        self.status_label.text = status
+        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.download_address, self)
+
+    def end_thread_download(self):
         Clock.schedule_once(self.download_address2, 1)
 
     def download_address2(self, delta_time):
-        Clock.schedule_once(self.download_address3, 1)
+        Clock.schedule_once(self.download_address3, 1.5)
         self.status_label.text = "Status: Downloaded"
 
     def download_address3(self, delta_time):
         window_manager.transition.direction = 'right'
         window_manager.current = 'name_dwn_lay'
         self.status_label.text = 'Select Video:'
+
+    def edit_dwn_lock(self, lock):
+        if lock:
+            self.dwn_lock = True
+            self.return_btn.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+            self.download_button1.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+            self.download_button2.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+            self.download_button3.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+            self.download_button4.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+            self.download_button5.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+        else:
+            self.dwn_lock = False
+            self.return_btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+            self.download_button1.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+            self.download_button2.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+            self.download_button3.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+            self.download_button4.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+            self.download_button5.background_color = [0.81640625, 0.3125, 0.43359375, 1]
 
 
 """ objekt ScrollViev odpowiadający za scrolowanie Songs grid, jest dzieckiem głownego layoutu """
