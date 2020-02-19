@@ -402,7 +402,7 @@
         Label:
             id: status_text
             text: ''
-            font_size: root.height / 12  if root.width > root.height else root.width / 12
+            font_size: root.height / 22  if root.width > root.height else root.width / 22
             color: 1, 1, 1, 1
             pos_hint: {'x': 0.2, 'y':0.2}
             size_hint: 0, 0
@@ -550,5 +550,33 @@
         border: 16, 16, 10, 1
         on_release: root.go_return()
         background_normal:''
+
+<LoadingLayout>:
+    logo_loading: logo_loading
+    loading_float_lay: loading_float_lay
+
+    FloatLayout:
+        id: loading_float_lay
+        Label:
+            text:'Loading ...'
+            pos_hint: {'x': 0.2, 'y': 0.1}
+            size_hint: 0.6, 0.2
+            font_size: root.height / 12  if root.width > root.height else root.width / 12
+        Label:
+            id: logo_loading
+            pos_hint:{'x': 0.3, 'y': 0.3}
+            size_hint:0.4, 0.4
+            Image:
+                size: logo_loading.size
+                pos: logo_loading.pos
+                source:'graphics/CMDownloader_logo_background.png'
+        Label:
+            id: logo_loading_static
+            pos_hint:{'x': 0.3, 'y': 0.3}
+            size_hint:0.4, 0.4
+            Image:
+                size: logo_loading_static.size
+                pos: logo_loading_static.pos
+                source:'graphics/CMDownloader_logo_head.png'
 
 

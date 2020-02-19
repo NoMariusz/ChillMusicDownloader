@@ -9,31 +9,10 @@ class DownloaderOperations(object):
     def __init__(self):
         self.inst_jo = JsonOperations()
 
-    def get_song_dict(self):
+    def get_song_dict(self, inst):
         """ zwraca słownik z parami tytuł url, a w miejscu zmiany z nowych na stare utwory wstawia pustą wartość none"""
-        channel = self.get_config("channel")
-        try:
-            page = requests.get(channel + "/videos?view=0&sort=dd&flow=grid")
-        except requests.exceptions.ConnectionError:
-            return {"Error: Can't connect to internet": 'Error'}
-        except requests.exceptions.MissingSchema:
-            return {"Error: Invalid YouTube channel address": 'Error'}
-
-        pagebs = BeautifulSoup(page.content, "html.parser")
-        url_dict = {}
-
-        last_track = JsonOperations.get_last_track(self.inst_jo)
-
-        for tag in pagebs.find_all("a", class_="yt-uix-sessionlink yt-uix-tile-link spf-link yt-ui-ellipsis yt-ui-ellipsis-2"):
-            if tag.get_text() == last_track:
-                url_dict["↑ New, ↓ Old"] = None
-            # print(tag.get_text())
-            url_dict[tag.get_text()] = self.urll(tag.get("href"))
-
-        if url_dict == {}:
-            url_dict = {"Error: Can't connect to this yt channel": 'Error'}
-
-        return url_dict
+        it = InternetThread(self, inst)
+        it.start()
 
     @staticmethod
     def urll(href):  # tworzy url
@@ -48,13 +27,8 @@ class DownloaderOperations(object):
     def ytdl_download(self, url, cause_inst=None):
         """ pobiera jeden utwór o podanym url """
         ydl = self.get_download_object()
-        try:
-            dwn_thread = DownloadThread(ydl, url, cause_inst)
-            dwn_thread.start()
-            #dwn_thread.join()
-            return "Status: Downloading"
-        except AttributeError:
-            return "Status: Error"
+        dwn_thread = DownloadThread(ydl, url, cause_inst)
+        dwn_thread.start()
 
     def get_download_object(self):
         """ zwraca obiekt pobierający o specyfikacji zgodnej z programem """
@@ -73,27 +47,12 @@ class DownloaderOperations(object):
         ydl = youtube_dl.YoutubeDL(ydl_opts)
         return ydl
 
-    def get_adress_dict_from_search(self, search_str):
+    def get_adress_dict_from_search(self, search_str, inst):
         """ Zwraca efekt wyszukiwania search_srt w yt jako słownik 5 pierwszych znalezionych filmików o wartościach
         nazwa: adres(krótki)"""
         search_str_form = self.query_parse(search_str)
-        try:
-            page = requests.get('https://www.youtube.com/results?search_query=%s' % search_str_form)
-        except requests.exceptions.ConnectionError:
-            return {"Error: Can't connect to this yt channel": 'Error'}
-        pagebs = BeautifulSoup(page.content, "html.parser")
-        url_dict = {}
-
-        counter = 0
-        for tag in pagebs.find_all("a", class_='yt-uix-tile-link yt-ui-ellipsis yt-ui-ellipsis-2 yt-uix-sessionlink spf-link'):
-            if counter >= 5:
-                break
-            url_dict[tag.get_text()] = self.urll(tag.get("href"))
-            counter += 1
-
-        if url_dict == {}:
-            url_dict = {"Error: Can't connect to this yt channel": 'Error'}
-        return url_dict
+        ist = InternetSearchThread(self, inst, search_str_form)
+        ist.start()
 
     @staticmethod
     def query_parse(parse_string):
@@ -124,9 +83,95 @@ class DownloaderOperations(object):
         config_dict = JsonOperations.load_json('config.json')
         return config_dict
 
+    @staticmethod
+    def get_video_title(url, cause_inst):
+        """ zdobywa tytuł video z podanego url, przy błędzie url, lub połączenia swraca error do instancji wywołującej """
+        try:
+            page = requests.get(url)
+        except requests.exceptions.ConnectionError:
+            cause_inst.download_error()
+            return 'Error'
+        except requests.exceptions.MissingSchema:
+            cause_inst.download_error()
+            return 'Error'
+        pagebs = BeautifulSoup(page.content, "html.parser")
+        elem = pagebs.find("span", class_='watch-title')
+        return elem.get_text().strip()
+
+
+class InternetThread(threading.Thread):
+    """ wątek odciążający DownloaderOperations.get_song_dict() dostaje instancje DownloaderOperations na której wykonuje
+     run, oraz instrukcje layoutu do którego ma wywołać skończenie swojej pracy, przy błędzie wywołuje funkcje od błędu
+     pobierania w danej instancji """
+    def __init__(self, instance, lay_inst, **kwargs):
+        super(InternetThread, self).__init__(**kwargs)
+        self.instance = instance
+        self.lay_inst = lay_inst
+
+    def run(self):
+        channel = self.instance.get_config("channel")
+        try:
+            page = requests.get(channel + "/videos?view=0&sort=dd&flow=grid")
+        except requests.exceptions.ConnectionError:
+            self.lay_inst.internet_thread_end({"Error: Can't connect to internet": 'Error'})
+        except requests.exceptions.MissingSchema:
+            self.lay_inst.internet_thread_end({"Error: Invalid YouTube channel address": 'Error'})
+        else:
+            pagebs = BeautifulSoup(page.content, "html.parser")
+            url_dict = {}
+
+            last_track = JsonOperations.get_last_track(self.instance.inst_jo)
+
+            for tag in pagebs.find_all("a",
+                                       class_="yt-uix-sessionlink yt-uix-tile-link spf-link yt-ui-ellipsis yt-ui-ellipsis-2"):
+                if tag.get_text() == last_track:
+                    url_dict["↑ New, ↓ Old"] = None
+                # print(tag.get_text())
+                url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
+
+            if url_dict == {}:
+                url_dict = {"Error: Can't connect to this yt channel": 'Error'}
+
+            self.lay_inst.internet_thread_end(url_dict)
+
+
+class InternetSearchThread(threading.Thread):
+    """ wątek robiący pracę za DownloaderOperations.get_adress_dict_from_search(), dizałanie podobne do InternetThread"""
+    def __init__(self, instance, lay_inst, search_str, **kwargs):
+        super(InternetSearchThread, self).__init__(**kwargs)
+        self.instance = instance
+        self.lay_inst = lay_inst
+        self.search_str = search_str
+
+    def run(self):
+        try:
+            page = requests.get('https://www.youtube.com/results?search_query=%s' % self.search_str)
+        except requests.exceptions.ConnectionError:
+            self.lay_inst.internet_thread_end({"Error: Can't connect": 'Error', "Error 1": 'Error',
+                                               "Error 2": 'Error', "Error 3": 'Error',
+                                               "Error 4": 'Error'})
+        else:
+            pagebs = BeautifulSoup(page.content, "html.parser")
+            url_dict = {}
+
+            counter = 0
+            for tag in pagebs.find_all("a",
+                                       class_='yt-uix-tile-link yt-ui-ellipsis yt-ui-ellipsis-2 yt-uix-sessionlink spf-link'):
+                if counter >= 5:
+                    break
+                url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
+                counter += 1
+
+            if url_dict == {}:
+                url_dict = {"Error: Can't connect": 'Error', "Error 1": 'Error',
+                            "Error 2": 'Error', "Error 3": 'Error',
+                            "Error 4": 'Error'}
+
+            self.lay_inst.internet_thread_end(url_dict)
+
 
 class DownloadThread(threading.Thread):
-
+    """ Oddzielny wątek do pobierania muzyki, odciąża layout, wywołuje się go za pomocą start() """
     def __init__(self, ytdl_object, url, cause_inst, **kwargs):
         super(DownloadThread, self).__init__(**kwargs)
         self.ytdl_object = ytdl_object
@@ -134,9 +179,17 @@ class DownloadThread(threading.Thread):
         self.cause_inst = cause_inst
 
     def run(self):
-        self.ytdl_object.download([self.url])
-        if self.cause_inst:     # wywołuje jeśli jest jakać instancja a nie jest pusta
-            self.cause_inst.end_thread_download()
+        try:
+            self.ytdl_object.download([self.url])
+        except ConnectionError:
+            self.cause_inst.download_error()
+        except youtube_dl.utils.ExtractorError:
+            self.cause_inst.download_error()
+        except AttributeError:
+            self.cause_inst.download_error()
+        else:
+            if self.cause_inst:     # wywołuje jeśli jest jakać instancja a nie jest pusta
+                self.cause_inst.end_thread_download()
 
 
 class JsonOperations(object):

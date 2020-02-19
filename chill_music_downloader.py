@@ -8,19 +8,25 @@ from kivy.uix.popup import Popup
 from kivy.uix.dropdown import DropDown
 from kivy.clock import Clock
 
+from kivy.uix.screenmanager import NoTransition, SlideTransition
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.config import Config
 
+from kivy.animation import Animation
+
+from kivy.graphics import *
+
 import sys
+import threading
 from downloader_modul import DownloaderOperations, JsonOperations
 
 Config.set('kivy', 'log_level', 'info')
 # Config.set('kivy', 'log_level', 'critical')
-Config.set('graphics', 'borderless', 0)
+# Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'window_state', 'minimized')
-# Config.set('graphics', 'window_state',  "visible")
+Config.set('graphics', 'window_state',  "visible")
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.write()
 kv_lay = Builder.load_file('chill_layout.kv')
@@ -54,22 +60,28 @@ class MainChillLayout(Screen):
         self.inst_do = DownloaderOperations()   # wspólna instancja json operations
 
     def load_songs(self, instance):
+        if instance.background_color == [0.81640625, 0.3125, 0.43359375, 1]:
+            inst_loading_layout.show()
+            Clock.schedule_once(self.load_songs1, 0.01)
+
+    def load_songs1(self, delta_time):
         """ Tworzy scrolowalną liste piosenek odblokowywuje inne opcje, jeśli opcje były już kiedyś ładowane czyści
         liste"""
-        if instance.background_color == [0.81640625, 0.3125, 0.43359375, 1]:
-            if self.is_song_loaded:
-                self.clear_scroll()
+        if self.is_song_loaded:
+            self.clear_scroll()
 
-            old_songs_dict = self.songs_dict
-            self.songs_dict = DownloaderOperations.get_song_dict(self.inst_do)     # pobiera słownik utworów
+        self.old_songs_dict = self.songs_dict
+        DownloaderOperations.get_song_dict(self.inst_do, self)     # pobiera słownik utworów
 
-            if old_songs_dict is not None:
-                if len(old_songs_dict) != len(self.songs_dict):     # jeśli długość listy utworów została zmieniona to rozciąga najpierw box layout do wklejania utworów, aby poprawnie weszły
-                    self.stretch_lay(self.songs_dict)
-                else:
-                    self.load_songs2()
+    def internet_thread_end(self, song_dict):
+        self.songs_dict = song_dict
+        if self.old_songs_dict is not None:
+            if len(self.old_songs_dict) != len(self.songs_dict):     # jeśli długość listy utworów została zmieniona to rozciąga najpierw box layout do wklejania utworów, aby poprawnie weszły
+                self.stretch_lay(self.songs_dict)
             else:
                 self.load_songs2()
+        else:
+            self.load_songs2()
 
     def load_songs2(self):
         self.scroll_float.add_widget(inst_scroll_viev)
@@ -88,6 +100,7 @@ class MainChillLayout(Screen):
             self.un_or_block_btn(list_btn_to_block=[self.new_download_btn, self.select_songs_btn], block=False)
 
         self.get_last_track()
+        inst_loading_layout.hide('main_lay')
 
     def download_all_new(self, instance):
         """ pobiera wszystkie nowe utwory jeśli został klikniety guzik, tworzy słownik utworów do pobrania """
@@ -150,11 +163,14 @@ class MainChillLayout(Screen):
             self.dwn_iter += 1
             #self.call_to_call_tdm()
         elif self.dwn_iter == self.len_dict+1:
+            self.make_dwn_grphs()
             self.download_music_end()
 
     def end_thread_download(self):
         Clock.schedule_once(self.call_to_dwn_more, 0)
-        # print(self.progress_text.text)
+
+    def download_error(self):
+        self.download_music_end(text='Error')
 
     def download_song_with_ytdl(self):
         """ funkcja która wysyła dany kawałek zgodnie z kolejnością pobierania do objektu pobierającego"""
@@ -169,9 +185,9 @@ class MainChillLayout(Screen):
             self.progress_text.text = 'Download %s of %s -> %s' % (self.dwn_iter, self.len_dict, list(self.dwn_dict.keys())[self.dwn_iter - 1])
             self.progress_current.size_hint = (0.6 / self.len_dict * self.dwn_iter, 0.58)
 
-    def download_music_end(self):
+    def download_music_end(self, text='Downloaded'):
         """ czyści pasek aktualnego pobrania, wyświetla napis i odwołuje sie do fukcji czyśczącej dolny pasek """
-        self.progress_text.text = 'Downloaded'
+        self.progress_text.text = text
         self.clear_scroll()
         self.progress_current.size_hint = (0, 0)
         Clock.schedule_once(self.download_music_end1, 0.8)
@@ -371,6 +387,7 @@ class PopupChange(Screen):
 
 
 class MainMenu(Screen):
+
     @staticmethod
     def go_to_chanel_dwn():
         window_manager.transition.direction = 'right'
@@ -490,19 +507,22 @@ class AddressDownloadLayout(Screen):
         if not self.dwn_lock:
             self.edit_lock_dwn(True)
             self.status_text.size_hint = (0.6, 0.2)
-            self.status_text.text = 'Status: Downloading'
+            self.make_extend_status()
             Clock.schedule_once(self.download_address1, 0)
 
     def download_address1(self, delta_time):
         """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
-        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.address_input.text, self)
-        self.status_text.text = status
+        DownloaderOperations.ytdl_download(DownloaderOperations(), self.address_input.text, self)
 
-    def end_thread_download(self):
+    def end_thread_download(self, *args):
         self.status_text.size_hint = (0, 0)
         self.status_text.text = ""
         self.address_input.text = ""
         self.edit_lock_dwn(False)
+
+    def download_error(self):
+        self.status_text.text = 'Error'
+        Clock.schedule_once(self.end_thread_download, 1)
 
     def edit_lock_dwn(self, lock):
         if lock:
@@ -513,6 +533,10 @@ class AddressDownloadLayout(Screen):
             self.dwn_lock = False
             self.return_btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]
             self.download_btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+
+    def make_extend_status(self):
+        x = DownloaderOperations().get_video_title(self.address_input.text, self)
+        self.status_text.text = "Status: Downloading \n" + x
 
 
 class NameDownloadLayout(Screen):
@@ -532,14 +556,25 @@ class NameDownloadLayout(Screen):
 
     def download_by_name(self):
         if self.name_input.text != '':
-            self.get_results_music()
-            self.name_input.text = ''
-            window_manager.transition.direction = 'left'
-            window_manager.current = 'name_result_lay'
+            inst_loading_layout.show()
+            Clock.schedule_once(self.download_by_name1, 0.1)
+
+    def download_by_name1(self, delta_time):
+        self.get_results_music()
 
     def get_results_music(self):
-        result_dict = DownloaderOperations().get_adress_dict_from_search(self.name_input.text)
+        """ wywołuje wątek pobierający wyniki wyszukiwania, który po zrobieniu swojej roboty wywołuje
+        internet_thread_end który zajmuje się załadowaniem wyników do drugiego okna i zmianom grafiki """
+        DownloaderOperations().get_adress_dict_from_search(self.name_input.text, self)
+
+    def internet_thread_end(self, result_dict):
+        """ wywoływane po załadowaniu słownika adresów przez InternetSearchThread zajmuje się załadowaniem następnego
+        okna i przygotowaniem grafiki """
         inst_name_result_layout.load_songs_to_grid(result_dict)
+        self.name_input.text = ''
+        inst_loading_layout.hide('name_dwn_lay')
+        window_manager.transition.direction = 'left'
+        window_manager.current = 'name_result_lay'
 
 
 class NameResultLayout(Screen):
@@ -578,7 +613,9 @@ class NameResultLayout(Screen):
 
     def download_music(self, instance):
         """ pobiera kawałek o takim numerze w słowniku jak instance czyli numer guzika """
-        if (self.result_dict != {"Error: Can't connect to this yt channel": 'Error'}) and (not self.dwn_lock):
+        if (self.result_dict != {"Error: Can't connect": 'Error', "Error 1": 'Error',
+                                 "Error 2": 'Error', "Error 3": 'Error',
+                                 "Error 4": 'Error'}) and (not self.dwn_lock):
             self.edit_dwn_lock(True)
             self.download_address = self.get_download_address(instance)
             self.status_label.text = 'Status: Downloading %s' % (self.get_download_name(instance))
@@ -594,11 +631,17 @@ class NameResultLayout(Screen):
         Clock.schedule_once(self.download_address1, 0)
 
     def download_address1(self, delta_time):
-        """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
-        status = DownloaderOperations.ytdl_download(DownloaderOperations(), self.download_address, self)
+        """ pobiera dany adres w przypadku błędu zwraca błąd połączenia """
+        DownloaderOperations.ytdl_download(DownloaderOperations(), self.download_address, self)
 
     def end_thread_download(self):
+        """ wywoływane z wątku pobierania po skończeniu pracy """
         Clock.schedule_once(self.download_address2, 1)
+
+    def download_error(self):
+        """ wywoływane z wątku pobierania w przypadku błędu """
+        Clock.schedule_once(self.download_address3, 1.5)
+        self.status_label.text = "Status: Error"
 
     def download_address2(self, delta_time):
         Clock.schedule_once(self.download_address3, 1.5)
@@ -628,6 +671,58 @@ class NameResultLayout(Screen):
             self.download_button5.background_color = [0.81640625, 0.3125, 0.43359375, 1]
 
 
+class LoadingLayout(Screen):
+    """ Layout pokazujący obraz ładowania, za pomocą show aktywuje się go a hidem chowa, tworzy też element obracania
+    dla logo_loading """
+    logo_loading = ObjectProperty(None)
+    loading_float_lay = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(LoadingLayout, self).__init__(**kwargs)
+        with self.logo_loading.canvas.before:
+            PushMatrix()
+            self.rotation = Rotate(angle=0, origin=[1, 1])
+
+        with self.logo_loading.canvas.after:
+            PopMatrix()
+
+    def show(self):
+        """ pokazuje swoją klasę i włącza animacje """
+        window_manager.transition = NoTransition()
+        window_manager.current = 'load_lay'
+        self.clock = Clock.schedule_once(self.animate_logo, 0)
+
+    def animate_logo(self, delta_time):
+        """ włącza animacje w osobnym wątku """
+        self.ath = AnimateThread(self)
+        self.ath.start()
+
+    def hide(self, cause_inst_name):
+        """ chowa ekran wracjąc do tekgo który zdecydował sięschować, wyłącza animacje i zegary """
+        self.clock.cancel()
+        self.ath.stop()
+        window_manager.current = cause_inst_name
+        window_manager.transition = SlideTransition()
+
+
+class AnimateThread(threading.Thread, LoadingLayout):
+    """ Kręci tłem loga w oparciu o instancję wywołującą """
+    def __init__(self, instance, **kwargs):
+        super(AnimateThread, self).__init__(**kwargs)
+        self.instance = instance
+
+    def run(self):
+        """ rozpoczyna zapętloną animacje """
+        self.instance.rotation.origin = [self.instance.width/2, self.instance.height/2]
+        anim = Animation(angle=360, duration=1.5, t='in_cubic') + Animation(angle=0, duration=0)
+        anim.start(self.instance.rotation)
+        anim.repeat = True
+
+    def stop(self):
+        """ kończy animacje """
+        Animation.cancel_all(self.instance.rotation, 'angle')
+
+
 """ objekt ScrollViev odpowiadający za scrolowanie Songs grid, jest dzieckiem głownego layoutu """
 inst_scroll_viev = ScrollView(size_hint=(1, 1), size=(Window.width, Window.height), pos_hint={'x': 0, 'y': 0})
 inst_songs_grid = SongsGrid()
@@ -653,6 +748,9 @@ window_manager.add_widget(inst_name_download_layout)
 
 inst_name_result_layout = NameResultLayout(name='name_result_lay')
 window_manager.add_widget(inst_name_result_layout)
+
+inst_loading_layout = LoadingLayout(name='load_lay')
+window_manager.add_widget(inst_loading_layout)
 
 Window.maximize()
 
