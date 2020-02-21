@@ -21,12 +21,14 @@ from kivy.graphics import *
 import sys
 import threading
 from downloader_modul import DownloaderOperations, JsonOperations
+from yt_api_modul import YtApiLoader
+from parse_modul import parse_yt_channel_name
 
-Config.set('kivy', 'log_level', 'info')
-# Config.set('kivy', 'log_level', 'critical')
+# Config.set('kivy', 'log_level', 'info')
+Config.set('kivy', 'log_level', 'critical')
 # Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'window_state', 'minimized')
-Config.set('graphics', 'window_state',  "visible")
+# Config.set('graphics', 'window_state',  "visible")
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.write()
 kv_lay = Builder.load_file('chill_layout.kv')
@@ -42,7 +44,8 @@ class MainChillLayout(Screen):
     select_songs_btn = ObjectProperty(None)
     change_song_btn = ObjectProperty(None)
     return_btn = ObjectProperty(None)
-    exit_btn = ObjectProperty(None)
+    yt_api_btn = ObjectProperty(None)
+    select_all_btn = ObjectProperty(None)
 
     download_progress_float = ObjectProperty(None)
     progress_text = ObjectProperty(None)
@@ -75,11 +78,8 @@ class MainChillLayout(Screen):
 
     def internet_thread_end(self, song_dict):
         self.songs_dict = song_dict
-        if self.old_songs_dict is not None:
-            if len(self.old_songs_dict) != len(self.songs_dict):     # jeśli długość listy utworów została zmieniona to rozciąga najpierw box layout do wklejania utworów, aby poprawnie weszły
-                self.stretch_lay(self.songs_dict)
-            else:
-                self.load_songs2()
+        if self.old_songs_dict is not None:     # jeśli długość listy utworów została zmieniona to rozciąga najpierw box layout do wklejania utworów, aby poprawnie weszły
+            self.stretch_lay(self.songs_dict)
         else:
             self.load_songs2()
 
@@ -114,9 +114,11 @@ class MainChillLayout(Screen):
             inst_songs_grid.clear_widgets()
             inst_songs_grid.extended_dict_to_grid(songs_dict=self.songs_dict)
             self.un_or_block_btn(
-                list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn],
+                list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn,
+                                   self.yt_api_btn],
                 block=True)
             self.make_chose_btn()
+            self.show_select_all_btn()
 
     def change_last_song(self, instance):
         """ otwiera popupa do zmiany lasttrack """
@@ -134,20 +136,14 @@ class MainChillLayout(Screen):
             window_manager.transition.direction = 'left'
             window_manager.current = 'menu_lay'
 
-    @staticmethod
-    def exit_app(instance):
-        if instance.background_color == [0.81640625, 0.3125, 0.43359375, 1]:
-            sys.exit()
-
     def download_music(self, dwn_dict):
         """ odpowiada za całe pobieranie, tworzy pasek postępu, blokuje guziki na czas pobierania, pobiera piosenki z
         listy w pętli, opartej na odwoływaniu sie w zegarze """
         self.make_progress_bar()
-        self.un_or_block_btn(list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn, self.return_btn, self.exit_btn], block=True)
+        self.un_or_block_btn(list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn, self.return_btn, self.yt_api_btn], block=True)
         self.dwn_iter = 1
         self.len_dict = len(dwn_dict)
         self.dwn_dict = dwn_dict
-        #self.make_dwn_grphs()
         self.clear_scroll()
         self.scroll_float.add_widget(Label(text="Please wait for end downloading",
                                            font_size=self.height / 29 if self.width > self.height else self.width / 29,
@@ -161,7 +157,6 @@ class MainChillLayout(Screen):
             self.make_dwn_grphs()
             self.download_song_with_ytdl()
             self.dwn_iter += 1
-            #self.call_to_call_tdm()
         elif self.dwn_iter == self.len_dict+1:
             self.make_dwn_grphs()
             self.download_music_end()
@@ -190,25 +185,34 @@ class MainChillLayout(Screen):
         self.progress_text.text = text
         self.clear_scroll()
         self.progress_current.size_hint = (0, 0)
+
+        self.status_download_end = None
+        if text != 'Downloaded':
+            self.status_download_end = 'Error'
         Clock.schedule_once(self.download_music_end1, 0.8)
 
     def download_music_end1(self, delta_time):
         """ Czyści pasek z pobieraniem, zdjemuje blokady na guzikach pobierania """
         self.progress_text.text = ''
         self.un_or_block_btn(
-            list_btn_to_block=[self.load_btn, self.change_song_btn, self.return_btn, self.exit_btn],
+            list_btn_to_block=[self.load_btn, self.change_song_btn, self.return_btn, self.yt_api_btn],
             block=False)
         self.progress_base.size_hint = (0, 0)
         self.progress_maked.size_hint = (0, 0)
-        JsonOperations.save_last_track(self.inst_jo, self.make_last_track_from_dict())   # po pobieraniu zapisuje najnowszy utwór jako najnowszą ścieżkę
+        if self.status_download_end != 'Error':
+            JsonOperations.save_last_track(self.inst_jo, self.make_last_track_from_dict())   # po pobieraniu zapisuje najnowszy utwór jako najnowszą ścieżkę
         self.clear_scroll()
 
-    def stretch_lay(self, songs_dict):
+    def stretch_lay(self, songs_dict, load_songs2=True):
         """ rozciąa grid layout na odpowiednią szerokość tak aby utwory po zmianie ilości do wczytania poprawnie weszły
          do layouta, w tym celu ładuje odpowiednią ilośc tabeli do tego layouta, aktualizuje go, a następnie czyści """
+        self.scroll_float.clear_widgets()
         self.scroll_float.add_widget(inst_scroll_viev)
         inst_songs_grid.fake_load(songs_dict)
-        Clock.schedule_once(self.stretch_lay2, 0)
+        if load_songs2:
+            Clock.schedule_once(self.stretch_lay2, 0)
+        else:
+            self.clear_scroll()
 
     def stretch_lay2(self, delta_time):
         """ po wyczyszczeniu czyni dalsze operacje do ładowania utworów """
@@ -218,6 +222,7 @@ class MainChillLayout(Screen):
     def clear_scroll(self):
         """ czyści z ekranu scrolowalną liste """
         self.scroll_float.clear_widgets()
+        inst_scroll_viev.btn_extended_list = []
         inst_songs_grid.clear_widgets()
         self.txt_list.text = ''
 
@@ -276,6 +281,7 @@ class MainChillLayout(Screen):
             self.progress_text.text = 'None songs selected'
             Clock.schedule_once(self.canel_chose, 1)
         else:
+            self.hide_select_all_btn()
             self.download_music(inst_songs_grid.url_chose_dict)
             self.remove_widget(self.chose_btn_canel)
             self.remove_widget(self.chose_btn_accept)
@@ -286,9 +292,10 @@ class MainChillLayout(Screen):
         self.progress_text.text = ''
         self.remove_widget(self.chose_btn_canel)
         self.remove_widget(self.chose_btn_accept)
-        self.un_or_block_btn(list_btn_to_block=[self.load_btn, self.change_song_btn], block=False)
+        self.un_or_block_btn(list_btn_to_block=[self.load_btn, self.change_song_btn, self.yt_api_btn], block=False)
         self.clear_scroll()
         inst_songs_grid.url_chose_dict = {}
+        self.hide_select_all_btn()
 
     def un_or_block_btn(self, list_btn_to_block, block):
         """ blokuje lub odblokowywuje przyciski """
@@ -302,6 +309,62 @@ class MainChillLayout(Screen):
     def get_last_track(self):
         """ zczytuje ze słownika piosenek ostatni pobrany utwór """
         self.last_track = JsonOperations.get_last_track(self.inst_jo)
+
+    def select_all(self):
+        """ funkcja zaznaczająca wszystkie guziki w instancji gridlayautu scrollview """
+        for btn in inst_songs_grid.btn_extended_list:
+            inst_songs_grid.url_chose_dict[btn.background_normal] = btn.background_down
+            btn.background_color = [0.453125, 0.26953125, 0.67578125, 1]
+
+    def show_select_all_btn(self):
+        self.select_all_btn.opacity = 1
+        self.select_all_btn.size_hint = (0.10, 0.05)
+
+    def hide_select_all_btn(self):
+        self.select_all_btn.opacity = 0
+        self.select_all_btn.size_hint = (0, 0)
+
+    def yt_api_load(self, instance):
+        """ jeśli guzik jest aktywny ładuje za pomocą yt_api nowy słownik i go wrzuca na scrollview z wyborem """
+        if instance.background_color == [0.81640625, 0.3125, 0.43359375, 1]:
+            inst_loading_layout.show()
+            Clock.schedule_once(self.yt_api_load1, 0)
+
+    def yt_api_load1(self, delta_time):
+        """ wysyła żądanie do loadera yt_api aby zdobyć słownik utworów """
+        self.old_songs_dict = self.songs_dict
+        x = YtApiLoader(self)
+        x.get_yt_api_dict()
+
+    def end_yt_api_loader(self, yta_dict):
+        """ wywoływane po skończeniu yt_api_loadera jeśli słownik jest pusty to zwraca błąd """
+        self.songs_dict = yta_dict
+        if yta_dict != {}:
+            self.yt_api_load_after_loader()
+        else:
+            self.download_music_end(text="Error: can't connect")
+        inst_loading_layout.hide('main_lay')
+
+    def yt_api_load_after_loader(self):
+        """ ładuje słownik do scrollview, zaznacza że piosenki są załadowane, dodaje widget scrolview, rozszerza layout
+         scrollview do rozmiarów słownika, czyści grid, ładuje go do grid layout, z możliwością zaznaczenia blokuje
+         guziki tworzy guziki wyboru """
+        self.is_song_loaded = True
+
+        if self.old_songs_dict is not None:      # jeśli lista utworów nie jest pusta to rozciąga najpierw box layout do wklejania utworów, aby poprawnie weszły
+            self.stretch_lay(self.songs_dict, load_songs2=False)
+
+        self.scroll_float.add_widget(inst_scroll_viev)
+
+        self.txt_list.text = 'List of Songs:'
+        inst_songs_grid.clear_widgets()
+        inst_songs_grid.extended_dict_to_grid(songs_dict=self.songs_dict)
+        self.un_or_block_btn(
+            list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn,
+                               self.yt_api_btn],
+            block=True)
+        self.make_chose_btn()
+        self.show_select_all_btn()
 
 
 class SongsGrid(GridLayout):
@@ -321,7 +384,7 @@ class SongsGrid(GridLayout):
 
     def load_dict_to_grid2(self, delta_time):
         for key in self.songs_dict:
-            wid = Label(text=key, color=(1, 1, 1, 1), font_name='Arial')
+            wid = Label(text=key, color=(1, 1, 1, 1), font_name='Arial', font_size=int(inst_main_chill_layout.width / 40))
             wid.font_size = self.width / 37
             if key == "↑ New, ↓ Old":
                 wid.color = (0.8980392156862745, 0.6274509803921569, 0.8588235294117647, 1)
@@ -330,16 +393,19 @@ class SongsGrid(GridLayout):
     def extended_dict_to_grid(self, songs_dict):
         """ wprowadza do grid layout 2kolumnowe lisy, gdzie jest guzik do zaznacznia odzanczania zapisujący url
          zaznaczonych utworów, jeśli trafi na rozdziałke to nie wprowadza guzika"""
+        # print(" 399 cmd.py: ", songs_dict)
         self.cols = 2
-        self.size_hint = (1, len(songs_dict) / 10)
+        self.size_hint = (1, 1 + (len(songs_dict) / 10))
+        self.btn_extended_list = []
         for key in songs_dict:
-            wid = Label(text=key, size_hint_x=0.9, color=(1, 1, 1, 1), font_name='Arial', font_size=self.width / 37)
-            if key == "↑ New, ↓ Old" or songs_dict[key] == 'Error':
+            wid = Label(text=key, size_hint_x=0.9, color=(1, 1, 1, 1), font_name='Arial', font_size=int(inst_main_chill_layout.width / 55))
+            if key == "↑ New, ↓ Old" or key == 'Error' or key == 'Your daily limit expires' or key == 'Invalid channel name':
                 but = Label(size_hint_x=0.1)
                 wid.color = (0.8980392156862745, 0.6274509803921569, 0.8588235294117647, 1)
             else:
                 but = Button(size_hint_x=0.1, background_normal=key, background_down=songs_dict[key], background_color=(0.8980392156862745, 0.6274509803921569, 0.8588235294117647, 1))
                 but.bind(on_press=self.song_btn_press)
+                self.btn_extended_list.append(but)
             self.add_widget(but)
             self.add_widget(wid)
 
@@ -437,18 +503,33 @@ class OptionsLay(Screen):
         options_dict['save_path'] = self.dir_input.text
         options_dict['file_type'] = self.change_file_type_dropdown_main_btn.text
 
-        self.check_channel_options(self.channel_input.text)
-        if options_dict['channel'] != self.channel_input.text:
-            self.block_on_change_channel()
-            options_dict['channel'] = self.channel_input.text
+        if self.parse_yt_channel_name():
+            self.format_channel_input()
+            self.check_channel_options(self.channel_input.text)
+            if options_dict['channel'] != self.channel_input.text:
+                self.block_on_change_channel()
+                options_dict['channel'] = self.channel_input.text
 
+            self.save_btn.text = 'Saved'
+        else:
+            self.save_btn.text = 'Bad channel'
         JsonOperations.save_json(options_dict, 'config.json')
-
-        self.save_btn.text = 'Saved'
         Clock.schedule_once(self.change_text_save_btn, 0.8)
 
     def change_text_save_btn(self, delta_time):
         self.save_btn.text = 'Save'
+
+    def parse_yt_channel_name(self):
+        """ za pomocą zewnętrznej funkcji sprawdza czy podany adres jest poprwany, czyli czy jest po  nazwie lub id """
+        if parse_yt_channel_name(self.channel_input.text):
+            return True
+        return False
+
+    def format_channel_input(self):
+        """ odcina niepotrzebną końcówkę w adresie """
+        txt = self.channel_input.text
+        if len(txt.split("/")) != 5:
+            self.channel_input.text = "/".join(txt.split("/")[:5])
 
     @staticmethod
     def check_channel_options(new_channel):
@@ -751,6 +832,8 @@ window_manager.add_widget(inst_name_result_layout)
 
 inst_loading_layout = LoadingLayout(name='load_lay')
 window_manager.add_widget(inst_loading_layout)
+
+Clock.max_iteration = 5000       # określa maksymalną liczbę zagniżdżonych zegarów
 
 Window.maximize()
 

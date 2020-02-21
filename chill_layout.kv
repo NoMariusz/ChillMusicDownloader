@@ -11,7 +11,8 @@
     select_songs_btn: select_songs_btn
     change_song_btn: change_song_btn
     return_btn: return_btn
-    exit_btn: exit_btn
+    yt_api_btn: yt_api_btn
+    select_all_btn: select_all_btn
 
     download_progress_float: download_progress_float
     progress_text: progress_text
@@ -81,7 +82,7 @@
 
         Button:
             id: return_btn
-            pos_hint: {'x':0.01, 'y': 0.31}
+            pos_hint: {'x':0.01, 'y': 0.21}
             size_hint: 0.28, 0.08
             text:'Return'
             font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
@@ -91,14 +92,14 @@
             background_normal:''
 
         Button:
-            id: exit_btn
-            pos_hint: {'x':0.01, 'y': 0.21}
+            id: yt_api_btn
+            pos_hint: {'x':0.01, 'y': 0.31}
             size_hint: 0.28, 0.08
-            text:'Exit'
+            text:'Load more'
             font_size: root.height / 25  if root.width > (root.height * 2) else root.width / 47
             background_color: 0.81640625, 0.3125, 0.43359375, 1
             border: 16, 16, 10, 1
-            on_release: root.exit_app(exit_btn)
+            on_release: root.yt_api_load(yt_api_btn)
             background_normal:''
 
         FloatLayout:
@@ -185,6 +186,17 @@
 
                 pos_hint:{'x': 0.2, 'y': 0.01}
                 size_hint: 0, 0
+        Button:
+            id: select_all_btn
+            pos_hint: {'x':0.34, 'y': 0.915}
+            size_hint: 0, 0
+            opacity: 0
+            text:'Select All'
+            font_size: root.height / 35  if root.width > (root.height * 2) else root.width / 57
+            background_color: 0.81640625, 0.3125, 0.43359375, 1
+            border: 16, 16, 10, 1
+            on_release: root.select_all()
+            background_normal:''
 
 
 
@@ -578,5 +590,3 @@
                 size: logo_loading_static.size
                 pos: logo_loading_static.pos
                 source:'graphics/CMDownloader_logo_head.png'
-
-

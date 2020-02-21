@@ -113,8 +113,10 @@ class InternetThread(threading.Thread):
         try:
             page = requests.get(channel + "/videos?view=0&sort=dd&flow=grid")
         except requests.exceptions.ConnectionError:
+            # print("\t116 requests.exceptions.ConnectionError")
             self.lay_inst.internet_thread_end({"Error: Can't connect to internet": 'Error'})
         except requests.exceptions.MissingSchema:
+            # print("\t118 requests.exceptions.MissingSchema")
             self.lay_inst.internet_thread_end({"Error: Invalid YouTube channel address": 'Error'})
         else:
             pagebs = BeautifulSoup(page.content, "html.parser")
@@ -130,6 +132,7 @@ class InternetThread(threading.Thread):
                 url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
 
             if url_dict == {}:
+                # print("\t135 url_dict == {}")
                 url_dict = {"Error: Can't connect to this yt channel": 'Error'}
 
             self.lay_inst.internet_thread_end(url_dict)
@@ -182,10 +185,13 @@ class DownloadThread(threading.Thread):
         try:
             self.ytdl_object.download([self.url])
         except ConnectionError:
+            # print('Error: ConnectionError')
             self.cause_inst.download_error()
         except youtube_dl.utils.ExtractorError:
+            # print('Error: youtube_dl.utils.ExtractorError')
             self.cause_inst.download_error()
         except AttributeError:
+            # print('Error: AttributeError')
             self.cause_inst.download_error()
         else:
             if self.cause_inst:     # wywołuje jeśli jest jakać instancja a nie jest pusta
