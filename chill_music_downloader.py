@@ -67,7 +67,7 @@ class MainChillLayout(Screen):
             inst_loading_layout.show()
             Clock.schedule_once(self.load_songs1, 0.01)
 
-    def load_songs1(self, delta_time):
+    def load_songs1(self, _):
         """ Tworzy scrolowalną liste piosenek odblokowywuje inne opcje, jeśli opcje były już kiedyś ładowane czyści
         liste"""
         if self.is_song_loaded:
@@ -191,7 +191,7 @@ class MainChillLayout(Screen):
             self.status_download_end = 'Error'
         Clock.schedule_once(self.download_music_end1, 0.8)
 
-    def download_music_end1(self, delta_time):
+    def download_music_end1(self, _):
         """ Czyści pasek z pobieraniem, zdjemuje blokady na guzikach pobierania """
         self.progress_text.text = ''
         self.un_or_block_btn(
@@ -214,7 +214,7 @@ class MainChillLayout(Screen):
         else:
             self.clear_scroll()
 
-    def stretch_lay2(self, delta_time):
+    def stretch_lay2(self, _):
         """ po wyczyszczeniu czyni dalsze operacje do ładowania utworów """
         self.clear_scroll()
         self.load_songs2()
@@ -330,7 +330,7 @@ class MainChillLayout(Screen):
             inst_loading_layout.show()
             Clock.schedule_once(self.yt_api_load1, 0)
 
-    def yt_api_load1(self, delta_time):
+    def yt_api_load1(self, _):
         """ wysyła żądanie do loadera yt_api aby zdobyć słownik utworów """
         self.old_songs_dict = self.songs_dict
         x = YtApiLoader(self)
@@ -338,6 +338,7 @@ class MainChillLayout(Screen):
 
     def end_yt_api_loader(self, yta_dict):
         """ wywoływane po skończeniu yt_api_loadera jeśli słownik jest pusty to zwraca błąd """
+        # print("\t341 main end yt_api thread dict in inst_main_lay: ", yta_dict)
         self.songs_dict = yta_dict
         if yta_dict != {}:
             self.yt_api_load_after_loader()
@@ -351,6 +352,7 @@ class MainChillLayout(Screen):
          guziki tworzy guziki wyboru """
         self.is_song_loaded = True
 
+        # print("\t355 main start stretch lay to yt_api dict")
         if self.old_songs_dict is not None:      # jeśli lista utworów nie jest pusta to rozciąga najpierw box layout do wklejania utworów, aby poprawnie weszły
             self.stretch_lay(self.songs_dict, load_songs2=False)
 
@@ -358,7 +360,10 @@ class MainChillLayout(Screen):
 
         self.txt_list.text = 'List of Songs:'
         inst_songs_grid.clear_widgets()
+
+        # print("\t364 main start load yt_api dict to grid")
         inst_songs_grid.extended_dict_to_grid(songs_dict=self.songs_dict)
+        # print("\t366 main end load yt_api dict to grid")
         self.un_or_block_btn(
             list_btn_to_block=[self.new_download_btn, self.select_songs_btn, self.load_btn, self.change_song_btn,
                                self.yt_api_btn],
@@ -382,7 +387,7 @@ class SongsGrid(GridLayout):
         self.songs_dict = songs_dict
         Clock.schedule_once(self.load_dict_to_grid2, 0)
 
-    def load_dict_to_grid2(self, delta_time):
+    def load_dict_to_grid2(self, _):
         for key in self.songs_dict:
             wid = Label(text=key, color=(1, 1, 1, 1), font_name='Arial', font_size=int(inst_main_chill_layout.width / 40))
             wid.font_size = self.width / 37
@@ -516,7 +521,7 @@ class OptionsLay(Screen):
         JsonOperations.save_json(options_dict, 'config.json')
         Clock.schedule_once(self.change_text_save_btn, 0.8)
 
-    def change_text_save_btn(self, delta_time):
+    def change_text_save_btn(self, _):
         self.save_btn.text = 'Save'
 
     def parse_yt_channel_name(self):
@@ -591,7 +596,7 @@ class AddressDownloadLayout(Screen):
             self.make_extend_status()
             Clock.schedule_once(self.download_address1, 0)
 
-    def download_address1(self, delta_time):
+    def download_address1(self, _):
         """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
         DownloaderOperations.ytdl_download(DownloaderOperations(), self.address_input.text, self)
 
@@ -640,7 +645,7 @@ class NameDownloadLayout(Screen):
             inst_loading_layout.show()
             Clock.schedule_once(self.download_by_name1, 0.1)
 
-    def download_by_name1(self, delta_time):
+    def download_by_name1(self, _):
         self.get_results_music()
 
     def get_results_music(self):
@@ -711,7 +716,7 @@ class NameResultLayout(Screen):
     def download_music1(self):
         Clock.schedule_once(self.download_address1, 0)
 
-    def download_address1(self, delta_time):
+    def download_address1(self, _):
         """ pobiera dany adres w przypadku błędu zwraca błąd połączenia """
         DownloaderOperations.ytdl_download(DownloaderOperations(), self.download_address, self)
 
@@ -724,11 +729,11 @@ class NameResultLayout(Screen):
         Clock.schedule_once(self.download_address3, 1.5)
         self.status_label.text = "Status: Error"
 
-    def download_address2(self, delta_time):
+    def download_address2(self, _):
         Clock.schedule_once(self.download_address3, 1.5)
         self.status_label.text = "Status: Downloaded"
 
-    def download_address3(self, delta_time):
+    def download_address3(self, _):
         window_manager.transition.direction = 'right'
         window_manager.current = 'name_dwn_lay'
         self.status_label.text = 'Select Video:'
@@ -773,7 +778,7 @@ class LoadingLayout(Screen):
         window_manager.current = 'load_lay'
         self.clock = Clock.schedule_once(self.animate_logo, 0)
 
-    def animate_logo(self, delta_time):
+    def animate_logo(self, _):
         """ włącza animacje w osobnym wątku """
         self.ath = AnimateThread(self)
         self.ath.start()

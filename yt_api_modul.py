@@ -37,10 +37,10 @@ class LoadThread(threading.Thread):
         try:
             yta_dict = get_yt_api_dict()
         except ConnectionError:
-            # print('lth: ConnectionError')
+            # print('Error 40 lth: ConnectionError')
             self.instance.end_loading_thread({})
         except httplib2.ServerNotFoundError:
-            # print("lth: httplib2.ServerNotFoundError")
+            # print("Error 43 lth: httplib2.ServerNotFoundError")
             self.instance.end_loading_thread({})
         else:
             self.instance.end_loading_thread(yta_dict)
@@ -67,13 +67,16 @@ def get_yt_api_dict():
         get_channel_name(), jeśli nazwa będzie błędna zwróci 0 zwracające błąd, jeśli zapisane jest w formacie channel
          to za pomocą check_is_config_id to zwraca od razu id"""
         x = check_is_config_id()
+        # print("\t70 yt-api-modul: channel_id ", x)
         if x:       # sprawdza czy w konfiguracji jest url z id czy nazwą, jeśli z id to zwraca to id
             return x
 
         channel_name = get_channel_name()
+        # print("\t74 yt-api-modul: channel_name ", channel_name)
         if channel_name == 0:
             return 0
         x = yta_get_channel_id_by_name(channel_name)
+        # print("\t78 yt-api-modul: channel_id ", x)
         return x
 
     def urll(href):  # tworzy url
@@ -96,6 +99,7 @@ def get_yt_api_dict():
     old_last_time = False
 
     channel_id = get_channel_id()
+    # print("\t99 yt_api_modul channel id:", channel_id)
 
     if channel_id == 0:
         return {'Invalid channel name': None}
@@ -118,11 +122,11 @@ def get_yt_api_dict():
             response = request.execute()
         except googleapiclient.errors.HttpError:
             dwn_dict['Your daily limit expires'] = None
-            # print('daily limit expires, googleapiclient.errors.HttpError')
+            # print('Error yt_api_modul 122: daily limit expires, googleapiclient.errors.HttpError')
             break
 
         if not response['items']:
-            # print('No more items')
+            # print('\t126 main No more items')
             break
 
         for xx in response['items']:
@@ -134,7 +138,7 @@ def get_yt_api_dict():
             old_last_time = last_time
 
             if 'videoId' in xx['id'].keys() and 'title' in xx['snippet'].keys():
-                #print(str(iterate) + " " + xx['id']['videoId'] + " --- " + xx['snippet']['title'])
+                # print(str(iterate) + " " + xx['id']['videoId'] + " --- " + xx['snippet']['title'])
                 dwn_dict[xx['snippet']['title']] = urll(xx['id']['videoId'])
                 iterate += 1
             """else:
@@ -142,6 +146,7 @@ def get_yt_api_dict():
         pub_time = xx['snippet']['publishedAt']
         pub_time = make_early_time(pub_time)
 
+    # print("\t146 yt_api_modul dict gived by yt-api: ", dwn_dict)
     return dwn_dict
 
 
@@ -176,15 +181,13 @@ def yta_get_channel_id_by_name(name):
         response = request.execute()
     except googleapiclient.errors.HttpError:
         return -1
-
     # print("search id response: ", response)
 
     if 'items' not in response:
         return 0
     if 'id' not in response['items'][0]:
         return 0
-
-    return response['items']['id']
+    return response['items'][0]['id']
 
 
 def check_is_config_id():
