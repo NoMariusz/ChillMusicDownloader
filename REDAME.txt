@@ -1,4 +1,4 @@
-Chill Music Downloader is python music from youtube downloader
+Chill Music Downloader is python youtube music downloader
 
 Python Modules:
 	-requests v2.22.0
@@ -10,7 +10,7 @@ Python Modules:
 
 *To correct play you must also have ffmpeg.exe
 
-Program download .mp3, .aac and others file to destination folder, from youtube.com, by address, name of song, or name of last download song from gived channel
+Program download .mp3, .aac and others audio files to destination folder, from youtube.com, by address, name of song, or name of last download song from gived channel
 
 Update:
 	-Loading screen
