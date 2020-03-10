@@ -228,7 +228,7 @@ class MainChillLayout(Screen):
 
     def make_progress_bar(self):
         """ tworzy tło paska pobierania """
-        self.progress_text.text = 'Rozpoczynanie ...'
+        self.progress_text.text = 'Starting ...'
         self.progress_base.size_hint = (0.6, 0.58)
 
     def make_url_download_dict(self):
