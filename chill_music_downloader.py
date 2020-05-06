@@ -26,7 +26,9 @@ from parse_modul import parse_yt_channel_name
 
 # Config.set('kivy', 'log_level', 'info')
 Config.set('kivy', 'log_level', 'critical')
-# Config.set('graphics', 'borderless', 0)
+Config.set('graphics', 'borderless', 0)
+Config.set('graphics', 'width', 1080)
+Config.set('graphics', 'height', 720)
 Config.set('graphics', 'window_state', 'minimized')
 # Config.set('graphics', 'window_state',  "visible")
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
@@ -228,7 +230,7 @@ class MainChillLayout(Screen):
 
     def make_progress_bar(self):
         """ tworzy tło paska pobierania """
-        self.progress_text.text = 'Rozpoczynanie ...'
+        self.progress_text.text = 'Starting ...'
         self.progress_base.size_hint = (0.6, 0.58)
 
     def make_url_download_dict(self):
@@ -840,7 +842,7 @@ window_manager.add_widget(inst_loading_layout)
 
 Clock.max_iteration = 5000       # określa maksymalną liczbę zagniżdżonych zegarów
 
-Window.maximize()
+Window.restore()
 
 
 class ChillApp(App):

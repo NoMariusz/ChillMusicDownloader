@@ -44,8 +44,7 @@ class DownloaderOperations(object):
                 'preferredquality': '192',
             }],
         }
-        ydl = youtube_dl.YoutubeDL(ydl_opts)
-        return ydl
+        return ydl_opts
 
     def get_adress_dict_from_search(self, search_str, inst):
         """ Zwraca efekt wyszukiwania search_srt w yt jako słownik 5 pierwszych znalezionych filmików o wartościach
@@ -113,10 +112,10 @@ class InternetThread(threading.Thread):
         try:
             page = requests.get(channel + "/videos?view=0&sort=dd&flow=grid")
         except requests.exceptions.ConnectionError:
-            # print("\t116 requests.exceptions.ConnectionError")
+            print("\t116 requests.exceptions.ConnectionError")
             self.lay_inst.internet_thread_end({"Error: Can't connect to internet": 'Error'})
         except requests.exceptions.MissingSchema:
-            # print("\t118 requests.exceptions.MissingSchema")
+            print("\t118 requests.exceptions.MissingSchema")
             self.lay_inst.internet_thread_end({"Error: Invalid YouTube channel address": 'Error'})
         else:
             pagebs = BeautifulSoup(page.content, "html.parser")
@@ -128,11 +127,11 @@ class InternetThread(threading.Thread):
                                        class_="yt-uix-sessionlink yt-uix-tile-link spf-link yt-ui-ellipsis yt-ui-ellipsis-2"):
                 if tag.get_text() == last_track:
                     url_dict["↑ New, ↓ Old"] = None
-                # print(tag.get_text())
+                # print("\tTag in bs4 parsing:", tag.get_text())
                 url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
 
             if url_dict == {}:
-                # print("\t135 url_dict == {}")
+                print("\t135 url_dict == {}")
                 url_dict = {"Error: Can't connect to this yt channel": 'Error'}
 
             self.lay_inst.internet_thread_end(url_dict)
@@ -175,23 +174,27 @@ class InternetSearchThread(threading.Thread):
 
 class DownloadThread(threading.Thread):
     """ Oddzielny wątek do pobierania muzyki, odciąża layout, wywołuje się go za pomocą start() """
-    def __init__(self, ytdl_object, url, cause_inst, **kwargs):
+    def __init__(self, ytdl_config, url, cause_inst, **kwargs):
         super(DownloadThread, self).__init__(**kwargs)
-        self.ytdl_object = ytdl_object
+        self.ytdl_config = ytdl_config
         self.url = url
         self.cause_inst = cause_inst
 
     def run(self):
         try:
-            self.ytdl_object.download([self.url])
+            ytdl_object = youtube_dl.YoutubeDL(self.ytdl_config)
+            # print("downloading url: %s" % self.url, "\nwith config: ", self.ytdl_config)
+            ytdl_object.download([self.url])
+            # print("end downloading")
         except ConnectionError:
-            # print('Error: ConnectionError')
+            print('DownloadThread: Error: ConnectionError')
             self.cause_inst.download_error()
         except youtube_dl.utils.ExtractorError:
-            # print('Error: youtube_dl.utils.ExtractorError')
+            print('DownloadThread: Error: youtube_dl.utils.ExtractorError')
             self.cause_inst.download_error()
         except AttributeError:
-            # print('Error: AttributeError')
+            print('DownloadThread: Error: AttributeError')
+            self.ytdl_config.download([self.url])
             self.cause_inst.download_error()
         else:
             if self.cause_inst:     # wywołuje jeśli jest jakać instancja a nie jest pusta
