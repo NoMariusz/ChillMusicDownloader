@@ -185,7 +185,6 @@ class DownloadThread(threading.Thread):
             ytdl_object = youtube_dl.YoutubeDL(self.ytdl_config)
             # print("downloading url: %s" % self.url, "\nwith config: ", self.ytdl_config)
             ytdl_object.download([self.url])
-            # print("end downloading")
         except ConnectionError:
             print('DownloadThread: Error: ConnectionError')
             self.cause_inst.download_error()
@@ -194,11 +193,9 @@ class DownloadThread(threading.Thread):
             self.cause_inst.download_error()
         except AttributeError:
             print('DownloadThread: Error: AttributeError')
-            self.ytdl_config.download([self.url])
             self.cause_inst.download_error()
         else:
-            if self.cause_inst:     # wywołuje jeśli jest jakać instancja a nie jest pusta
-                self.cause_inst.end_thread_download()
+            self.cause_inst.end_thread_download()
 
 
 class JsonOperations(object):

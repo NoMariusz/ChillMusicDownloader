@@ -191,7 +191,7 @@ class MainChillLayout(Screen):
         self.status_download_end = None
         if text != 'Downloaded':
             self.status_download_end = 'Error'
-        Clock.schedule_once(self.download_music_end1, 0.8)
+        Clock.schedule_once(self.download_music_end1, 1.8)
 
     def download_music_end1(self, _):
         """ Czyści pasek z pobieraniem, zdjemuje blokady na guzikach pobierania """
@@ -610,7 +610,7 @@ class AddressDownloadLayout(Screen):
 
     def download_error(self):
         self.status_text.text = 'Error'
-        Clock.schedule_once(self.end_thread_download, 1)
+        Clock.schedule_once(self.end_thread_download, 1.2)
 
     def edit_lock_dwn(self, lock):
         if lock:
@@ -773,6 +773,8 @@ class LoadingLayout(Screen):
 
         with self.logo_loading.canvas.after:
             PopMatrix()
+        self.ath = AnimateThread(self)
+        self.clock = Clock
 
     def show(self):
         """ pokazuje swoją klasę i włącza animacje """
@@ -782,13 +784,12 @@ class LoadingLayout(Screen):
 
     def animate_logo(self, _):
         """ włącza animacje w osobnym wątku """
-        self.ath = AnimateThread(self)
         self.ath.start()
 
     def hide(self, cause_inst_name):
         """ chowa ekran wracjąc do tekgo który zdecydował sięschować, wyłącza animacje i zegary """
-        self.clock.cancel()
         self.ath.stop()
+        self.clock.cancel()
         window_manager.current = cause_inst_name
         window_manager.transition = SlideTransition()
 
