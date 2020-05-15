@@ -24,8 +24,8 @@ from downloader_modul import DownloaderOperations, JsonOperations
 from yt_api_modul import YtApiLoader
 from parse_modul import parse_yt_channel_name
 
-# Config.set('kivy', 'log_level', 'info')
-Config.set('kivy', 'log_level', 'critical')
+Config.set('kivy', 'log_level', 'info')
+# Config.set('kivy', 'log_level', 'critical')
 Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'width', 1080)
 Config.set('graphics', 'height', 720)
@@ -778,9 +778,9 @@ class LoadingLayout(Screen):
 
     def show(self):
         """ pokazuje swoją klasę i włącza animacje """
+        self.clock = Clock.schedule_once(self.animate_logo, 0)
         window_manager.transition = NoTransition()
         window_manager.current = 'load_lay'
-        self.clock = Clock.schedule_once(self.animate_logo, 0)
 
     def animate_logo(self, _):
         """ włącza animacje w osobnym wątku """
@@ -788,8 +788,8 @@ class LoadingLayout(Screen):
 
     def hide(self, cause_inst_name):
         """ chowa ekran wracjąc do tekgo który zdecydował sięschować, wyłącza animacje i zegary """
-        self.ath.stop()
         self.clock.cancel()
+        self.ath.stop()
         window_manager.current = cause_inst_name
         window_manager.transition = SlideTransition()
 
