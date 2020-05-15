@@ -24,8 +24,8 @@ from downloader_modul import DownloaderOperations, JsonOperations
 from yt_api_modul import YtApiLoader
 from parse_modul import parse_yt_channel_name
 
-Config.set('kivy', 'log_level', 'info')
-# Config.set('kivy', 'log_level', 'critical')
+# Config.set('kivy', 'log_level', 'info')
+Config.set('kivy', 'log_level', 'critical')
 Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'width', 1080)
 Config.set('graphics', 'height', 720)
@@ -790,6 +790,7 @@ class LoadingLayout(Screen):
         """ chowa ekran wracjąc do tekgo który zdecydował sięschować, wyłącza animacje i zegary """
         self.clock.cancel()
         self.ath.stop()
+        self.ath = AnimateThread(self)
         window_manager.current = cause_inst_name
         window_manager.transition = SlideTransition()
 
