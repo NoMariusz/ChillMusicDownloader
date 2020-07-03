@@ -1,11 +1,12 @@
 import googleapiclient.discovery
 import datetime
 import os
+import html
 
 import threading
 import httplib2
 
-from downloader_modul import JsonOperations
+from json_operations_modul import JsonOperations
 
 
 class YtApiLoader(object):
@@ -46,7 +47,7 @@ class LoadThread(threading.Thread):
             self.instance.end_loading_thread(yta_dict)
 
 
-def get_yt_api_dict():
+def get_yt_api_dict(tracks_limit=-1):
     """ zdobywa słownik z yt_api w zależności od id_kanału który jest zdobywany z nazwy zdobywanej z url kanału w
     konfiguracji, zapętlony w kółko zdobywa po 50 utworów sortowanych od najnowszych z czasem publikacji starszym niż
     ostatni załadowany element (dzięki czemu te 50 utworów są ładowane coraz starsze), jeśli element nie jest utworem
@@ -58,7 +59,7 @@ def get_yt_api_dict():
     def make_early_time(str_time):
         """ przekształaca aktualny string z datą na obiekt czasu dodaje do niego sekunde i przeształca ponownie na
         stringa daty w odpowiednim formacie """
-        time = datetime.datetime.strptime(str_time, "%Y-%m-%dT%H:%M:%S.000Z")
+        time = datetime.datetime.strptime(str_time, "%Y-%m-%dT%H:%M:%SZ")
         time = time - datetime.timedelta(seconds=1)
         return time.isoformat() + ".000Z"
 
@@ -79,9 +80,8 @@ def get_yt_api_dict():
         # print("\t78 yt-api-modul: channel_id ", x)
         return x
 
-    def urll(href):  # tworzy url
-        u = "https://www.youtube.com" + href
-        return u
+    def make_video_url_by_id(video_id):
+        return "https://www.youtube.com/watch?v=" + video_id
 
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -108,6 +108,8 @@ def get_yt_api_dict():
 
     old_last_time = datetime.datetime.now()
 
+    last_track_name = JsonOperations().get_last_track()
+
     while True:
         request = youtube.search().list(
             part="snippet",
@@ -120,6 +122,7 @@ def get_yt_api_dict():
 
         try:
             response = request.execute()
+            print("\t\tresponse maked")
         except googleapiclient.errors.HttpError:
             dwn_dict['Your daily limit expires'] = None
             # print('Error yt_api_modul 122: daily limit expires, googleapiclient.errors.HttpError')
@@ -130,7 +133,7 @@ def get_yt_api_dict():
             break
 
         for xx in response['items']:
-            last_time = datetime.datetime.strptime(xx['snippet']['publishedAt'], "%Y-%m-%dT%H:%M:%S.000Z")
+            last_time = datetime.datetime.strptime(xx['snippet']['publishedAt'], "%Y-%m-%dT%H:%M:%SZ")
             if old_last_time:
                 if int((old_last_time - last_time).seconds) < -1:
                     # print('int((old_last_time - last_time).seconds) < -1')
@@ -139,12 +142,18 @@ def get_yt_api_dict():
 
             if 'videoId' in xx['id'].keys() and 'title' in xx['snippet'].keys():
                 # print(str(iterate) + " " + xx['id']['videoId'] + " --- " + xx['snippet']['title'])
-                dwn_dict[xx['snippet']['title']] = urll(xx['id']['videoId'])
+                video_name = html.unescape(xx['snippet']['title'])
+                if video_name == last_track_name:
+                    dwn_dict["↑ New, ↓ Old"] = None
+                dwn_dict[video_name] = make_video_url_by_id(xx['id']['videoId'])
                 iterate += 1
             """else:
                 print(xx)"""
         pub_time = xx['snippet']['publishedAt']
         pub_time = make_early_time(pub_time)
+
+        if (tracks_limit != -1) and (len(dwn_dict) >= tracks_limit):
+            return dwn_dict
 
     # print("\t146 yt_api_modul dict gived by yt-api: ", dwn_dict)
     return dwn_dict

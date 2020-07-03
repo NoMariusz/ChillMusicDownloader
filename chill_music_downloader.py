@@ -20,12 +20,13 @@ from kivy.graphics import *
 
 import sys
 import threading
-from downloader_modul import DownloaderOperations, JsonOperations
+from downloader_modul import DownloaderOperations
+from json_operations_modul import JsonOperations
 from yt_api_modul import YtApiLoader
 from parse_modul import parse_yt_channel_name
 
-# Config.set('kivy', 'log_level', 'info')
-Config.set('kivy', 'log_level', 'critical')
+Config.set('kivy', 'log_level', 'info')
+# Config.set('kivy', 'log_level', 'critical')
 Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'width', 1080)
 Config.set('graphics', 'height', 720)
@@ -600,7 +601,7 @@ class AddressDownloadLayout(Screen):
 
     def download_address1(self, _):
         """ pobiera dany adres w przypadku błędu zwraca błęd połączenia """
-        DownloaderOperations.ytdl_download(DownloaderOperations(), self.address_input.text, self)
+        DownloaderOperations().ytdl_download(self.address_input.text, name=None, cause_inst=self)
 
     def end_thread_download(self, *args):
         self.status_text.size_hint = (0, 0)

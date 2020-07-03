@@ -278,14 +278,14 @@
             pos_hint: {'x':0.65, 'y':0.45}
             size_hint: 0.25, 0.1
             on_release: root.go_to_address_dwn()
-        Button:
-            text:'Download with name'
-            font_size: root.height / 44  if root.width > root.height else root.width / 44
-            background_color: 0.81640625, 0.3125, 0.43359375, 1
-            background_normal: ''
-            pos_hint: {'x':0.375, 'y':0.70}
-            size_hint: 0.25, 0.1
-            on_release: root.go_to_name_dwn()
+        # Button:
+        #    text:'Download with name'
+        #    font_size: root.height / 44  if root.width > root.height else root.width / 44
+        #    background_color: 0.81640625, 0.3125, 0.43359375, 1
+        #    background_normal: ''
+        #    pos_hint: {'x':0.375, 'y':0.70}
+        #    size_hint: 0.25, 0.1
+        #    on_release: root.go_to_name_dwn()
         Button:
             id: exit_btn
             pos_hint: {'x':0.51, 'y': 0.11}

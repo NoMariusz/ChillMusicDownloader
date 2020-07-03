@@ -1,8 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import youtube_dl
-import json
 import threading
+from json_operations_modul import JsonOperations
+from yt_api_modul import *
 
 
 class DownloaderOperations(object):
@@ -19,15 +20,14 @@ class DownloaderOperations(object):
         u = "https://www.youtube.com" + href
         return u
 
-    def download_music(self, name, url, cause_inst=None):
+    def download_music(self, url, name=None, cause_inst=None):
         """ Kompleksowo pobiera utwór i zapisuje go do bazy jako ostatnio pobrany """
-        _ = self.ytdl_download(url, cause_inst)
-        JsonOperations.save_last_track(self.inst_jo, name)
+        _ = self.ytdl_download(url, name, cause_inst)
 
-    def ytdl_download(self, url, cause_inst=None):
+    def ytdl_download(self, url, name, cause_inst=None):
         """ pobiera jeden utwór o podanym url """
         ydl = self.get_download_object()
-        dwn_thread = DownloadThread(ydl, url, cause_inst)
+        dwn_thread = DownloadThread(ydl, url, name, cause_inst)
         dwn_thread.start()
 
     def get_download_object(self):
@@ -94,8 +94,8 @@ class DownloaderOperations(object):
             cause_inst.download_error()
             return 'Error'
         pagebs = BeautifulSoup(page.content, "html.parser")
-        elem = pagebs.find("span", class_='watch-title')
-        return elem.get_text().strip()
+        elem = pagebs.find("meta", {"name": "title"})
+        return elem.get_attribute_list("content")[0].strip()
 
 
 class InternetThread(threading.Thread):
@@ -108,33 +108,40 @@ class InternetThread(threading.Thread):
         self.lay_inst = lay_inst
 
     def run(self):
-        channel = self.instance.get_config("channel")
-        try:
-            page = requests.get(channel + "/videos?view=0&sort=dd&flow=grid")
-        except requests.exceptions.ConnectionError:
-            print("\t116 requests.exceptions.ConnectionError")
-            self.lay_inst.internet_thread_end({"Error: Can't connect to internet": 'Error'})
-        except requests.exceptions.MissingSchema:
-            print("\t118 requests.exceptions.MissingSchema")
-            self.lay_inst.internet_thread_end({"Error: Invalid YouTube channel address": 'Error'})
-        else:
-            pagebs = BeautifulSoup(page.content, "html.parser")
-            url_dict = {}
+        # channel = self.instance.get_config("channel")
+        # try:
+        #     # page = requests.get(channel + "/videos?view=0&sort=dd&flow=grid")
+        #     page = requests.get(channel + "/videos")
+        # except requests.exceptions.ConnectionError:
+        #     print("\t116 requests.exceptions.ConnectionError")
+        #     self.lay_inst.internet_thread_end({"Error: Can't connect to internet": 'Error'})
+        # except requests.exceptions.MissingSchema:
+        #     print("\t118 requests.exceptions.MissingSchema")
+        #     self.lay_inst.internet_thread_end({"Error: Invalid YouTube channel address": 'Error'})
+        # else:
+        #     pagebs = BeautifulSoup(page.content, "html.parser")
+        #     url_dict = {}
+        #
+        #     last_track = JsonOperations.get_last_track(self.instance.inst_jo)
+        #
+        #     print("\t InternetThread  - url to request %s" % (channel + "/videos"))
+        #     print("\t InternetThread - pagebs: %s" % pagebs)
+        #
+        #     for tag in pagebs.find_all("a",
+        #                                # class_="yt-uix-sessionlink yt-uix-tile-link spf-link yt-ui-ellipsis yt-ui-ellipsis-2"):
+        #                                class_="yt-simple-endpoint ytd-grid-video-renderer"):
+        #         if tag.get_text() == last_track:
+        #             url_dict["↑ New, ↓ Old"] = None
+        #         print("\tTag in bs4 parsing:", tag.get_text())
+        #         url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
+        #
+        #     if url_dict == {}:
+        #         print("\t135 url_dict == {}")
+        #         url_dict = {"Error: Can't connect to this yt channel": 'Error'}
+        #
+        #     self.lay_inst.internet_thread_end(url_dict)
 
-            last_track = JsonOperations.get_last_track(self.instance.inst_jo)
-
-            for tag in pagebs.find_all("a",
-                                       class_="yt-uix-sessionlink yt-uix-tile-link spf-link yt-ui-ellipsis yt-ui-ellipsis-2"):
-                if tag.get_text() == last_track:
-                    url_dict["↑ New, ↓ Old"] = None
-                # print("\tTag in bs4 parsing:", tag.get_text())
-                url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
-
-            if url_dict == {}:
-                print("\t135 url_dict == {}")
-                url_dict = {"Error: Can't connect to this yt channel": 'Error'}
-
-            self.lay_inst.internet_thread_end(url_dict)
+        self.lay_inst.internet_thread_end(get_yt_api_dict(50))
 
 
 class InternetSearchThread(threading.Thread):
@@ -154,6 +161,7 @@ class InternetSearchThread(threading.Thread):
                                                "Error 4": 'Error'})
         else:
             pagebs = BeautifulSoup(page.content, "html.parser")
+            print("InternetSearchThread - page %s" % pagebs)
             url_dict = {}
 
             counter = 0
@@ -174,16 +182,17 @@ class InternetSearchThread(threading.Thread):
 
 class DownloadThread(threading.Thread):
     """ Oddzielny wątek do pobierania muzyki, odciąża layout, wywołuje się go za pomocą start() """
-    def __init__(self, ytdl_config, url, cause_inst, **kwargs):
+    def __init__(self, ytdl_config, url, vid_name,  cause_inst, **kwargs):
         super(DownloadThread, self).__init__(**kwargs)
         self.ytdl_config = ytdl_config
         self.url = url
         self.cause_inst = cause_inst
+        self.video_name = vid_name
 
     def run(self):
         try:
             ytdl_object = youtube_dl.YoutubeDL(self.ytdl_config)
-            # print("downloading url: %s" % self.url, "\nwith config: ", self.ytdl_config)
+            print("downloading url: %s" % self.url, "\nwith config: ", self.ytdl_config)
             ytdl_object.download([self.url])
         except ConnectionError:
             print('DownloadThread: Error: ConnectionError')
@@ -195,40 +204,6 @@ class DownloadThread(threading.Thread):
             print('DownloadThread: Error: AttributeError')
             self.cause_inst.download_error()
         else:
+            if self.video_name is not None:
+                JsonOperations().save_last_track(self.video_name)
             self.cause_inst.end_thread_download()
-
-
-class JsonOperations(object):
-    @staticmethod
-    def load_json(file_name):
-        """ wczytuje słownik """
-        scores_file = open(file_name, "r")
-        json_scores = scores_file.read()
-        dict_last_track = json.loads(json_scores)
-        scores_file.close()
-        return dict_last_track
-
-    @staticmethod
-    def save_json(dict_last_track, file_name):
-        """ zapisuje słownik """
-        json_scores = json.dumps(dict_last_track)
-        scores_file = open(file_name, "w")
-        scores_file.write(json_scores)
-        scores_file.close()
-
-    def get_last_track(self):
-        """ wczytuje ostatnią ścieżkę """
-        channel = self.get_config("channel")
-        dict_last_track = self.load_json("last_track.json")
-        return dict_last_track[channel].strip()
-
-    def save_last_track(self, last_track):
-        """ zapisuje ostanią ścieżkę, lasttrack to json """
-        dict_last_track = self.load_json('last_track.json')
-        channel = self.get_config('channel')
-        dict_last_track[channel] = last_track
-        self.save_json(dict_last_track, "last_track.json")
-
-    def get_config(self, what):
-        conf_dict = self.load_json('config.json')
-        return conf_dict[what].strip()
