@@ -35,3 +35,7 @@ class JsonOperations(object):
     def get_config(self, what):
         conf_dict = self.load_json('config.json')
         return conf_dict[what].strip()
+
+    @staticmethod
+    def get_dict_from_json_str(json_str):
+        return json.loads(json_str)

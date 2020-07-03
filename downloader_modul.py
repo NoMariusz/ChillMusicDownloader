@@ -3,7 +3,8 @@ from bs4 import BeautifulSoup
 import youtube_dl
 import threading
 from json_operations_modul import JsonOperations
-from yt_api_modul import *
+
+from yt_api_modul import get_yt_api_dict
 
 
 class DownloaderOperations(object):
@@ -20,9 +21,13 @@ class DownloaderOperations(object):
         u = "https://www.youtube.com" + href
         return u
 
+    @staticmethod
+    def make_video_url_by_id(video_id):
+        return "https://www.youtube.com/watch?v=" + video_id
+
     def download_music(self, url, name=None, cause_inst=None):
         """ Kompleksowo pobiera utwór i zapisuje go do bazy jako ostatnio pobrany """
-        _ = self.ytdl_download(url, name, cause_inst)
+        self.ytdl_download(url, name, cause_inst)
 
     def ytdl_download(self, url, name, cause_inst=None):
         """ pobiera jeden utwór o podanym url """
@@ -37,7 +42,7 @@ class DownloaderOperations(object):
         ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': path + '/%(title)s.%(ext)s',
-            'quiet': True,
+            # 'quiet': True,
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': ftype,
@@ -108,39 +113,6 @@ class InternetThread(threading.Thread):
         self.lay_inst = lay_inst
 
     def run(self):
-        # channel = self.instance.get_config("channel")
-        # try:
-        #     # page = requests.get(channel + "/videos?view=0&sort=dd&flow=grid")
-        #     page = requests.get(channel + "/videos")
-        # except requests.exceptions.ConnectionError:
-        #     print("\t116 requests.exceptions.ConnectionError")
-        #     self.lay_inst.internet_thread_end({"Error: Can't connect to internet": 'Error'})
-        # except requests.exceptions.MissingSchema:
-        #     print("\t118 requests.exceptions.MissingSchema")
-        #     self.lay_inst.internet_thread_end({"Error: Invalid YouTube channel address": 'Error'})
-        # else:
-        #     pagebs = BeautifulSoup(page.content, "html.parser")
-        #     url_dict = {}
-        #
-        #     last_track = JsonOperations.get_last_track(self.instance.inst_jo)
-        #
-        #     print("\t InternetThread  - url to request %s" % (channel + "/videos"))
-        #     print("\t InternetThread - pagebs: %s" % pagebs)
-        #
-        #     for tag in pagebs.find_all("a",
-        #                                # class_="yt-uix-sessionlink yt-uix-tile-link spf-link yt-ui-ellipsis yt-ui-ellipsis-2"):
-        #                                class_="yt-simple-endpoint ytd-grid-video-renderer"):
-        #         if tag.get_text() == last_track:
-        #             url_dict["↑ New, ↓ Old"] = None
-        #         print("\tTag in bs4 parsing:", tag.get_text())
-        #         url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
-        #
-        #     if url_dict == {}:
-        #         print("\t135 url_dict == {}")
-        #         url_dict = {"Error: Can't connect to this yt channel": 'Error'}
-        #
-        #     self.lay_inst.internet_thread_end(url_dict)
-
         self.lay_inst.internet_thread_end(get_yt_api_dict(50))
 
 
@@ -153,6 +125,7 @@ class InternetSearchThread(threading.Thread):
         self.search_str = search_str
 
     def run(self):
+        # zdobywa stronę
         try:
             page = requests.get('https://www.youtube.com/results?search_query=%s' % self.search_str)
         except requests.exceptions.ConnectionError:
@@ -161,21 +134,29 @@ class InternetSearchThread(threading.Thread):
                                                "Error 4": 'Error'})
         else:
             pagebs = BeautifulSoup(page.content, "html.parser")
-            print("InternetSearchThread - page %s" % pagebs)
             url_dict = {}
 
-            counter = 0
-            for tag in pagebs.find_all("a",
-                                       class_='yt-uix-tile-link yt-ui-ellipsis yt-ui-ellipsis-2 yt-uix-sessionlink spf-link'):
-                if counter >= 5:
-                    break
-                url_dict[tag.get_text()] = self.instance.urll(tag.get("href"))
-                counter += 1
+            # znajduję odpowiedni element script zawierający informację o wyszukanych video
+            scripts_list = []
+            for script in pagebs.find_all("script"):
+                scripts_list.append(str(script))
 
-            if url_dict == {}:
-                url_dict = {"Error: Can't connect": 'Error', "Error 1": 'Error',
-                            "Error 2": 'Error', "Error 3": 'Error',
-                            "Error 4": 'Error'}
+            matched_script = list(filter(lambda x: x[9:39] == '    window["ytInitialData"] = ', scripts_list))[0]
+
+            # formatuje ten tag script do słownika
+            formatted_script = matched_script[39:]
+            formatted_script = formatted_script[:-119]
+
+            info_dict = JsonOperations.get_dict_from_json_str(formatted_script)
+
+            # wypełna 5 pól słownika url_dict w oparciu o informację z tego słownika
+            counter = 0
+            for video_info in info_dict["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"]:
+                if 'videoRenderer' in video_info.keys():
+                    url_dict[video_info["videoRenderer"]["title"]["runs"][0]["text"]] = DownloaderOperations.make_video_url_by_id(video_info['videoRenderer']['videoId'])
+                    counter += 1
+                    if counter >= 5:
+                        break
 
             self.lay_inst.internet_thread_end(url_dict)
 
@@ -192,7 +173,7 @@ class DownloadThread(threading.Thread):
     def run(self):
         try:
             ytdl_object = youtube_dl.YoutubeDL(self.ytdl_config)
-            print("downloading url: %s" % self.url, "\nwith config: ", self.ytdl_config)
+            print("downloading url: %s" % self.url)
             ytdl_object.download([self.url])
         except ConnectionError:
             print('DownloadThread: Error: ConnectionError')

@@ -707,11 +707,16 @@ class NameResultLayout(Screen):
                                  "Error 4": 'Error'}) and (not self.dwn_lock):
             self.edit_dwn_lock(True)
             self.download_address = self.get_download_address(instance)
-            self.status_label.text = 'Status: Downloading %s' % (self.get_download_name(instance))
-            self.download_music1()
+            if self.download_address != "":
+                self.status_label.text = 'Status: Downloading %s' % (self.get_download_name(instance))
+                self.download_music1()
 
     def get_download_address(self, btn_instance):
-        return list(self.result_dict.values())[btn_instance]
+        try:
+            return list(self.result_dict.values())[btn_instance]
+        except IndexError:
+            print("NameDownloadLayout: get_download_address - IndexError, self.result_dict: %s , btn_instance: %s" % (self.result_dict, btn_instance))
+            return ""
 
     def get_download_name(self, btn_instance):
         return list(self.result_dict.keys())[btn_instance]
@@ -721,7 +726,7 @@ class NameResultLayout(Screen):
 
     def download_address1(self, _):
         """ pobiera dany adres w przypadku błędu zwraca błąd połączenia """
-        DownloaderOperations.ytdl_download(DownloaderOperations(), self.download_address, self)
+        DownloaderOperations().download_music(self.download_address, cause_inst=self)
 
     def end_thread_download(self):
         """ wywoływane z wątku pobierania po skończeniu pracy """
