@@ -6,7 +6,8 @@ import html
 import threading
 import httplib2
 
-from json_operations_modul import JsonOperations
+from src.json_operations_modul import JsonOperations
+from src.hidden import DEVELOPER_KEY
 
 
 class YtApiLoader(object):
@@ -87,7 +88,6 @@ def get_yt_api_dict(tracks_limit=-1):
 
     api_service_name = "youtube"
     api_version = "v3"
-    DEVELOPER_KEY = 'AIzaSyCBOTqSrSTFkspuoksjclT6U8LZPbT8pow'   # dev key
 
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey=DEVELOPER_KEY)
