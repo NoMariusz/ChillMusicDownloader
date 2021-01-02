@@ -21,10 +21,10 @@ from kivy.graphics import *
 import sys
 import threading
 
-from src.downloader_modul import DownloaderOperations
-from src.json_operations_modul import JsonOperations
-from src.yt_api_modul import YtApiLoader
-from src.parse_modul import parse_yt_channel_name
+from app.modules.downloader_modul import DownloaderOperations
+from app.modules.json_operations_modul import JsonOperations
+from app.modules.yt_api_modul import YtApiLoader
+from app.modules.parse_modul import parse_yt_channel_name
 
 
 # Config.set('kivy', 'log_level', 'info')
@@ -36,7 +36,7 @@ Config.set('graphics', 'height', 720)
 Config.set('graphics', 'window_state',  "visible")
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.write()
-kv_lay = Builder.load_file('chill_layout.kv')
+kv_lay = Builder.load_file('../data/chill_layout.kv')
 
 
 class MainChillLayout(Screen):
@@ -508,7 +508,7 @@ class OptionsLay(Screen):
 
     def save_options(self):
         """ zapisuje opcje, jeśli zmieniono kanał to czyści załadowne opcje i blokuje pobieranie, aby uniknąć błędów """
-        options_dict = JsonOperations.load_json('data/config.json')
+        options_dict = JsonOperations.load_json('../data/config.json')
 
         options_dict['save_path'] = self.dir_input.text
         options_dict['file_type'] = self.change_file_type_dropdown_main_btn.text
@@ -523,7 +523,7 @@ class OptionsLay(Screen):
             self.save_btn.text = 'Saved'
         else:
             self.save_btn.text = 'Bad channel'
-        JsonOperations.save_json(options_dict, 'data/config.json')
+        JsonOperations.save_json(options_dict, '../data/config.json')
         Clock.schedule_once(self.change_text_save_btn, 0.8)
 
     def change_text_save_btn(self, _):
@@ -544,10 +544,10 @@ class OptionsLay(Screen):
     @staticmethod
     def check_channel_options(new_channel):
         """ jeśli nowego kanału nie ma w bazie ostanich utworów to go dodaje """
-        last_track_dict = JsonOperations.load_json('data/last_track.json')
+        last_track_dict = JsonOperations.load_json('../data/last_track.json')
         if new_channel not in last_track_dict.keys():
             last_track_dict[new_channel] = ''
-            JsonOperations.save_json(last_track_dict, 'data/last_track.json')
+            JsonOperations.save_json(last_track_dict, '../data/last_track.json')
 
     @staticmethod
     def block_on_change_channel():
@@ -857,7 +857,7 @@ Window.restore()
 
 class ChillApp(App):
     def build(self):
-        self.icon = 'graphics/CMDownloader_logo.png'
+        self.icon = '../data/graphics/CMDownloader_logo.png'
         self.title = 'Chill Music Downloader'
         return window_manager
 

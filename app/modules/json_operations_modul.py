@@ -22,18 +22,18 @@ class JsonOperations(object):
     def get_last_track(self):
         """ wczytuje ostatnią ścieżkę """
         channel = self.get_config("channel")
-        dict_last_track = self.load_json("data/last_track.json")
+        dict_last_track = self.load_json("../data/last_track.json")
         return dict_last_track[channel].strip()
 
     def save_last_track(self, last_track):
         """ zapisuje ostanią ścieżkę, lasttrack to json """
-        dict_last_track = self.load_json('data/last_track.json')
+        dict_last_track = self.load_json('../data/last_track.json')
         channel = self.get_config('channel')
         dict_last_track[channel] = last_track
-        self.save_json(dict_last_track, "data/last_track.json")
+        self.save_json(dict_last_track, "../data/last_track.json")
 
     def get_config(self, what):
-        conf_dict = self.load_json('data/config.json')
+        conf_dict = self.load_json('../data/config.json')
         return conf_dict[what].strip()
 
     @staticmethod

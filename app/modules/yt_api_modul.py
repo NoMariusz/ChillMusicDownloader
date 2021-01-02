@@ -6,8 +6,8 @@ import html
 import threading
 import httplib2
 
-from src.json_operations_modul import JsonOperations
-from src.hidden import DEVELOPER_KEY
+from app.modules.json_operations_modul import JsonOperations
+from app.hidden import DEVELOPER_KEY
 
 
 class YtApiLoader(object):

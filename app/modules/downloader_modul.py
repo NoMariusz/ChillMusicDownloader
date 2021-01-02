@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 import youtube_dl
 import threading
 
-from src.json_operations_modul import JsonOperations
-from src.yt_api_modul import get_yt_api_dict
+from app.modules.json_operations_modul import JsonOperations
+from app.modules.yt_api_modul import get_yt_api_dict
 
 
 class DownloaderOperations(object):
@@ -84,7 +84,7 @@ class DownloaderOperations(object):
 
     @staticmethod
     def get_all_config():
-        config_dict = JsonOperations.load_json('data/config.json')
+        config_dict = JsonOperations.load_json('../data/config.json')
         return config_dict
 
     @staticmethod

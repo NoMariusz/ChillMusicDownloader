@@ -1,5 +1,6 @@
-/__pycache__
-/src/__pycache__
-/data/hidden.py
-ffmpeg.exe
+*__pycache__
+/app/hidden.py
+/venv
+/.idea
+/app/ffmpeg.exe
 notes.txt
