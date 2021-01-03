@@ -28,4 +28,4 @@ CMDownloader also remember last downloaded song from each channel, so you can do
 * kivy
 * google-api-python-client
 
-! To correct work, app must also have ffmpeg.exe file in root folder, can be download from [here] (https://ffmpeg.org/download.html)
+! To correct work, app must also have ffmpeg.exe file in app folder, can be download from [here] (https://ffmpeg.org/download.html)

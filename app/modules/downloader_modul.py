@@ -141,19 +141,23 @@ class InternetSearchThread(threading.Thread):
             for script in pagebs.find_all("script"):
                 scripts_list.append(str(script))
 
-            matched_script = list(filter(lambda x: x[9:39] == '    window["ytInitialData"] = ', scripts_list))[0]
+            found_initial_data_script = list(filter(lambda x: -1 < x.find("ytInitialData") < 70, scripts_list))[0]
 
             # formatuje ten tag script do słownika
-            formatted_script = matched_script[39:]
-            formatted_script = formatted_script[:-119]
+            formatted_script = found_initial_data_script[59:]
+            formatted_script = formatted_script[:-10]
 
             info_dict = JsonOperations.get_dict_from_json_str(formatted_script)
 
+            video_data_dict = info_dict["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"].get(
+                "sectionListRenderer")["contents"][0]["itemSectionRenderer"]["contents"]
+
             # wypełna 5 pól słownika url_dict w oparciu o informację z tego słownika
             counter = 0
-            for video_info in info_dict["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"]:
+            for video_info in video_data_dict:
                 if 'videoRenderer' in video_info.keys():
-                    url_dict[video_info["videoRenderer"]["title"]["runs"][0]["text"]] = DownloaderOperations.make_video_url_by_id(video_info['videoRenderer']['videoId'])
+                    url_dict[video_info["videoRenderer"]["title"]["runs"][0]["text"]] = \
+                        DownloaderOperations.make_video_url_by_id(video_info['videoRenderer']['videoId'])
                     counter += 1
                     if counter >= 5:
                         break
