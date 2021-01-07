@@ -4,7 +4,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
 from kivy.graphics import *
 
-from app.components.utils.AnimateThread import AnimateThread
+from components.utils.AnimateThread import AnimateThread
 
 
 class LoadingLayout(Screen):

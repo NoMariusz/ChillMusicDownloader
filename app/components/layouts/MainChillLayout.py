@@ -8,12 +8,12 @@ from kivy.core.window import Window
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 
-from app.modules.downloader_modul import DownloaderOperations
-from app.modules.json_operations_modul import JsonOperations
-from app.modules.yt_api_modul import YtApiLoader
+from modules.downloader_modul import DownloaderOperations
+from modules.json_operations_modul import JsonOperations
+from modules.yt_api_modul import YtApiLoader
 
-from app.components.utils.SongsGrid import SongsGrid
-from app.components.utils.PopupChange import PopupChange
+from components.utils.SongsGrid import SongsGrid
+from components.utils.PopupChange import PopupChange
 
 
 class MainChillLayout(Screen):

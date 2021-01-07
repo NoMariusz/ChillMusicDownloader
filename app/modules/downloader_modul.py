@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 import youtube_dl
 import threading
 
-from app.modules.json_operations_modul import JsonOperations
-from app.modules.yt_api_modul import get_yt_api_dict
+from modules.json_operations_modul import JsonOperations
+from modules.yt_api_modul import get_yt_api_dict
 
 
 class DownloaderOperations(object):

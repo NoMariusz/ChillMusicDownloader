@@ -4,7 +4,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.config import Config
 
-from app.components.LayoutManager import LayoutManager
+from components.LayoutManager import LayoutManager
 
 # Config.set('kivy', 'log_level', 'info')
 Config.set('kivy', 'log_level', 'critical')

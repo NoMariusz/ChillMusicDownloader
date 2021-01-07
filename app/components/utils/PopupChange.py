@@ -1,7 +1,7 @@
 from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
 
-from app.modules.json_operations_modul import JsonOperations
+from modules.json_operations_modul import JsonOperations
 
 
 class PopupChange(Screen):

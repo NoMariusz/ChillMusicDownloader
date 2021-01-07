@@ -4,9 +4,9 @@ from kivy.uix.dropdown import DropDown
 from kivy.clock import Clock
 from kivy.uix.button import Button
 
-from app.modules.downloader_modul import DownloaderOperations
-from app.modules.json_operations_modul import JsonOperations
-from app.modules.parse_modul import parse_yt_channel_name
+from modules.downloader_modul import DownloaderOperations
+from modules.json_operations_modul import JsonOperations
+from modules.parse_modul import parse_yt_channel_name
 
 
 class OptionsLay(Screen):

@@ -1,12 +1,12 @@
 from kivy.uix.screenmanager import ScreenManager
 
-from app.components.layouts.MainChillLayout import MainChillLayout
-from app.components.layouts.MainMenu import MainMenu
-from app.components.layouts.OptionsLay import OptionsLay
-from app.components.layouts.AddressDownloadLayout import AddressDownloadLayout
-from app.components.layouts.NameResultLayout import NameResultLayout
-from app.components.layouts.NameDownloadLayout import NameDownloadLayout
-from app.components.layouts.LoadingLayout import LoadingLayout
+from components.layouts.MainChillLayout import MainChillLayout
+from components.layouts.MainMenu import MainMenu
+from components.layouts.OptionsLay import OptionsLay
+from components.layouts.AddressDownloadLayout import AddressDownloadLayout
+from components.layouts.NameResultLayout import NameResultLayout
+from components.layouts.NameDownloadLayout import NameDownloadLayout
+from components.layouts.LoadingLayout import LoadingLayout
 
 
 class LayoutManager:

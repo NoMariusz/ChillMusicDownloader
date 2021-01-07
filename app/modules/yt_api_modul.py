@@ -6,8 +6,8 @@ import html
 import threading
 import httplib2
 
-from app.modules.json_operations_modul import JsonOperations
-from app.hidden import DEVELOPER_KEY
+from modules.json_operations_modul import JsonOperations
+from hidden import DEVELOPER_KEY
 
 
 class YtApiLoader(object):
@@ -122,7 +122,7 @@ def get_yt_api_dict(tracks_limit=-1):
 
         try:
             response = request.execute()
-            print("\t\tresponse maked")
+            # print("\t\trequest to YouTube Api made")
         except googleapiclient.errors.HttpError:
             dwn_dict['Your daily limit expires'] = None
             # print('Error yt_api_modul 122: daily limit expires, googleapiclient.errors.HttpError')

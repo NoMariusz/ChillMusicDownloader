@@ -2,7 +2,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 
-from app.modules.downloader_modul import DownloaderOperations
+from modules.downloader_modul import DownloaderOperations
 
 
 class AddressDownloadLayout(Screen):
