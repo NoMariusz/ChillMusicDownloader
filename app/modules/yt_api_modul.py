@@ -177,7 +177,6 @@ def yta_get_channel_id_by_name(name):
 
     api_service_name = "youtube"
     api_version = "v3"
-    DEVELOPER_KEY = "AIzaSyCBOTqSrSTFkspuoksjclT6U8LZPbT8pow"
 
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, developerKey=DEVELOPER_KEY)
