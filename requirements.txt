@@ -49,5 +49,5 @@ soupsieve==2.0
 uritemplate==3.0.1
 urllib3==1.25.8
 wcwidth==0.2.5
-youtube-dl==2020.11.19
+youtube-dl==2021.4.1
 zipp==3.1.0
