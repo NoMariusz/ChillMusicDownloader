@@ -218,7 +218,27 @@ def get_yt_search_results(search_string, max_results=5):
     request = youtube.search().list(
         part="snippet",
         maxResults=max_results,
-        q=search_string
+        q=search_string,
+        type="video"
+    )
+    response = request.execute()
+
+    return response
+
+def get_video_details(video_id):
+    """ return details about video from yt api by given video id """
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+    api_service_name = "youtube"
+    api_version = "v3"
+
+    youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey = DEVELOPER_KEY)
+
+    request = youtube.videos().list(
+        part="snippet",
+        id=video_id,
+        maxResults=1
     )
     response = request.execute()
 

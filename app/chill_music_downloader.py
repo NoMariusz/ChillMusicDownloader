@@ -6,8 +6,8 @@ from kivy.config import Config
 
 from components.LayoutManager import LayoutManager
 
-# Config.set('kivy', 'log_level', 'info')
-Config.set('kivy', 'log_level', 'critical')
+Config.set('kivy', 'log_level', 'info')
+# Config.set('kivy', 'log_level', 'critical')
 Config.set('graphics', 'borderless', 0)
 Config.set('graphics', 'width', 1080)
 Config.set('graphics', 'height', 720)

@@ -4,7 +4,8 @@ import youtube_dl
 import threading
 
 from modules.json_operations_modul import JsonOperations
-from modules.yt_api_modul import get_yt_api_dict, get_yt_search_results
+from modules.yt_api_modul import \
+    get_yt_api_dict, get_yt_search_results, get_video_details
 
 
 class DownloaderOperations(object):
@@ -89,18 +90,15 @@ class DownloaderOperations(object):
 
     @staticmethod
     def get_video_title(url, cause_inst):
-        """ zdobywa tytuł video z podanego url, przy błędzie url, lub połączenia swraca error do instancji wywołującej """
-        try:
-            page = requests.get(url)
-        except requests.exceptions.ConnectionError:
-            cause_inst.download_error()
-            return 'Error'
-        except requests.exceptions.MissingSchema:
-            cause_inst.download_error()
-            return 'Error'
-        pagebs = BeautifulSoup(page.content, "html.parser")
-        elem = pagebs.find("meta", {"name": "title"})
-        return elem.get_attribute_list("content")[0].strip()
+        """ zdobywa tytuł video od podanego url """
+        video_id = url.split("watch?v=")[1]
+        result = get_video_details(video_id)
+
+        if (result["pageInfo"]["totalResults"] < 1):
+            return "Can not receive informations"
+        
+        video_details = result["items"][0]
+        return video_details["snippet"]["title"]
 
 
 class InternetThread(threading.Thread):

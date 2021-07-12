@@ -4,6 +4,9 @@ from kivy.clock import Clock
 
 from modules.downloader_modul import DownloaderOperations
 
+# constants
+MAX_VIDEO_TITLE_LEN = 55
+
 
 class AddressDownloadLayout(Screen):
     """ umożliwia pobranie fimu z yt bezpośrednio po adresie, jeśli adres będzie nipoprawny to wyskoczy błąd """
@@ -55,5 +58,9 @@ class AddressDownloadLayout(Screen):
             self.download_btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]
 
     def make_extend_status(self):
-        x = DownloaderOperations().get_video_title(self.address_input.text, self)
-        self.status_text.text = "Status: Downloading \n" + x
+        video_title = DownloaderOperations().get_video_title(
+            self.address_input.text, self)
+        if len(video_title) > MAX_VIDEO_TITLE_LEN:
+            video_title = video_title[0: MAX_VIDEO_TITLE_LEN-4] + " ..."
+
+        self.status_text.text = "Status: Downloading \n" + video_title
