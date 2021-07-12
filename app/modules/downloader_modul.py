@@ -4,7 +4,7 @@ import youtube_dl
 import threading
 
 from modules.json_operations_modul import JsonOperations
-from modules.yt_api_modul import get_yt_api_dict
+from modules.yt_api_modul import get_yt_api_dict, get_yt_search_results
 
 
 class DownloaderOperations(object):
@@ -125,44 +125,22 @@ class InternetSearchThread(threading.Thread):
         self.search_str = search_str
 
     def run(self):
-        # zdobywa stronę
-        try:
-            page = requests.get('https://www.youtube.com/results?search_query=%s' % self.search_str)
-        except requests.exceptions.ConnectionError:
-            self.lay_inst.internet_thread_end({"Error: Can't connect": 'Error', "Error 1": 'Error',
-                                               "Error 2": 'Error', "Error 3": 'Error',
-                                               "Error 4": 'Error'})
-        else:
-            pagebs = BeautifulSoup(page.content, "html.parser")
-            url_dict = {}
+        # zdobywa dane z api
+        api_result = get_yt_search_results(self.search_str)
 
-            # znajduję odpowiedni element script zawierający informację o wyszukanych video
-            scripts_list = []
-            for script in pagebs.find_all("script"):
-                scripts_list.append(str(script))
+        # przygotowywuje słownik url_dict w oparciu o informację zdobyte z api
+        url_dict = {}
+        index = 0
 
-            found_initial_data_script = list(filter(lambda x: -1 < x.find("ytInitialData") < 70, scripts_list))[0]
+        while len(url_dict.keys()) < 5:
+            search_result = api_result["items"][index]
+            index += 1
 
-            # formatuje ten tag script do słownika
-            formatted_script = found_initial_data_script[59:]
-            formatted_script = formatted_script[:-10]
+            search_result_id = DownloaderOperations.make_video_url_by_id(search_result["id"]["videoId"])
+            search_result_title = search_result["snippet"]["title"]
+            url_dict[search_result_title] = search_result_id
 
-            info_dict = JsonOperations.get_dict_from_json_str(formatted_script)
-
-            video_data_dict = info_dict["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"].get(
-                "sectionListRenderer")["contents"][0]["itemSectionRenderer"]["contents"]
-
-            # wypełna 5 pól słownika url_dict w oparciu o informację z tego słownika
-            counter = 0
-            for video_info in video_data_dict:
-                if 'videoRenderer' in video_info.keys():
-                    url_dict[video_info["videoRenderer"]["title"]["runs"][0]["text"]] = \
-                        DownloaderOperations.make_video_url_by_id(video_info['videoRenderer']['videoId'])
-                    counter += 1
-                    if counter >= 5:
-                        break
-
-            self.lay_inst.internet_thread_end(url_dict)
+        self.lay_inst.internet_thread_end(url_dict)
 
 
 class DownloadThread(threading.Thread):

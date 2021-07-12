@@ -205,3 +205,21 @@ def check_is_config_id():
     if "channel" == conf.split("/")[3]:
         return conf.split("/")[4]
     return False
+
+def get_yt_search_results(search_string, max_results=5):
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+    api_service_name = "youtube"
+    api_version = "v3"
+
+    youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey = DEVELOPER_KEY)
+
+    request = youtube.search().list(
+        part="snippet",
+        maxResults=max_results,
+        q=search_string
+    )
+    response = request.execute()
+
+    return response
