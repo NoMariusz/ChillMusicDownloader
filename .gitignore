@@ -3,4 +3,5 @@
 /venv
 /.idea
 /app/ffmpeg.exe
-notes.txt
+/dev/*
+!build.bat
