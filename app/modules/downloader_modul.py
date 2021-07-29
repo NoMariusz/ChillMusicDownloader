@@ -165,13 +165,13 @@ class DownloadThread(threading.Thread):
             ytdl_object.download([self.url])
         except ConnectionError:
             print('DownloadThread: Error: ConnectionError')
-            self.cause_inst.download_error()
-        except youtube_dl.utils.ExtractorError:
-            print('DownloadThread: Error: youtube_dl.utils.ExtractorError')
-            self.cause_inst.download_error()
-        except AttributeError:
-            print('DownloadThread: Error: AttributeError')
-            self.cause_inst.download_error()
+            self.cause_inst.download_error('ConnectionError')
+        except youtube_dl.utils.ExtractorError as e:
+            print('DownloadThread: Error: youtube_dl.utils.ExtractorError: %s' % e)
+            self.cause_inst.download_error(e)
+        except AttributeError as e:
+            print('DownloadThread: Error: AttributeError %s' % e)
+            self.cause_inst.download_error("This webpage is age-gated")
         else:
             if self.video_name is not None:
                 JsonOperations().save_last_track(self.video_name)

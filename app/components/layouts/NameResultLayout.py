@@ -57,8 +57,8 @@ class NameResultLayout(Screen):
         """ pobiera kawałek o takim numerze w słowniku jak instance czyli numer guzika """
         if (self.songs_data != None) and (not self.dwn_lock):
             self.edit_dwn_lock(True)
-            self.download_address = self.songs_data[btn_index]["href"]
-            if self.download_address:
+            self.downloading_obj = self.songs_data[btn_index]
+            if self.downloading_obj:
                 self.status_label.text = 'Status: Downloading %s' % (self.songs_data[btn_index]["title"])
                 self.download_music1()
 
@@ -67,16 +67,18 @@ class NameResultLayout(Screen):
 
     def download_address1(self, _):
         """ pobiera dany adres w przypadku błędu zwraca błąd połączenia """
-        DownloaderOperations().download_music(self.download_address, cause_inst=self)
+        DownloaderOperations().download_music(
+            self.downloading_obj["href"], name=self.downloading_obj["title"],
+            cause_inst=self)
 
     def end_thread_download(self):
         """ wywoływane z wątku pobierania po skończeniu pracy """
         Clock.schedule_once(self.download_address2, 1)
 
-    def download_error(self):
+    def download_error(self, msg=None):
         """ wywoływane z wątku pobierania w przypadku błędu """
         Clock.schedule_once(self.download_address3, 1.5)
-        self.status_label.text = "Status: Error"
+        self.status_label.text = "Status: Error, info: %s" % msg
 
     def download_address2(self, _):
         Clock.schedule_once(self.download_address3, 1.5)
