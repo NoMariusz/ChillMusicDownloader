@@ -5,3 +5,4 @@
 /app/ffmpeg.exe
 /dev/*
 !build.bat
+!Chill Music Downloader.spec

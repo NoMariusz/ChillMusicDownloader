@@ -13,7 +13,8 @@ echo Start work
 :: define constant variables
 set main_path=%cd%
 
-set main_file_path=%main_path%\app\chill_music_downloader.py
+:: set main_file_path=%main_path%\app\chill_music_downloader.py
+set main_file_path=%main_path%\dev\Chill Music Downloader.spec
 set ico_path=%main_path%\data\graphics\CMDownloader_logo.ico
 
 set result_path=D:\files
@@ -25,6 +26,7 @@ cd  build
 @echo on
 
 :: run pyinstaller
+:: pyinstaller "%main_file_path%" -i "%ico_path%" -n "Chill Music Downloader" -c --specpath "%main_path%\dev"
 pyinstaller "%main_file_path%" -i "%ico_path%" -n "Chill Music Downloader" -c
 
 @echo off
