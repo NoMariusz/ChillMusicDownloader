@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from uritemplate import api
 import youtube_dl
 import threading
 
@@ -126,19 +127,26 @@ class InternetSearchThread(threading.Thread):
         # zdobywa dane z api
         api_result = get_yt_search_results(self.search_str)
 
-        # przygotowywuje słownik url_dict w oparciu o informację zdobyte z api
-        url_dict = {}
-        index = 0
+        if api_result is None:
+            self.lay_inst.internet_thread_end(None)
+            return
 
-        while len(url_dict.keys()) < 5:
+        # przygotowywuje listę z wymaganymi danymi w oparciu o informację zdobyte z api
+        songs_data = []
+
+        for index in range(5):
             search_result = api_result["items"][index]
-            index += 1
 
-            search_result_id = DownloaderOperations.make_video_url_by_id(search_result["id"]["videoId"])
-            search_result_title = search_result["snippet"]["title"]
-            url_dict[search_result_title] = search_result_id
+            search_result_url = DownloaderOperations.make_video_url_by_id(search_result["id"]["videoId"])
+            song_dict = {
+                "title": search_result["snippet"]["title"],
+                "href": search_result_url,
+                "channelTitle": search_result["snippet"]["channelTitle"],
+                "image": search_result["snippet"]["thumbnails"]["default"]
+            }
+            songs_data.append(song_dict)
 
-        self.lay_inst.internet_thread_end(url_dict)
+        self.lay_inst.internet_thread_end(songs_data)
 
 
 class DownloadThread(threading.Thread):

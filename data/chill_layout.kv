@@ -464,19 +464,14 @@
             background_normal:''
 
 <NameResultLayout>:
-    song1_name: song1_name
-    song2_name: song2_name
-    song3_name: song3_name
-    song4_name: song4_name
-    song5_name: song5_name
+    songs_labels: [song1_name, song2_name, song3_name, song4_name, song5_name]
     status_label: status_label
 
     return_btn: return_btn
-    download_button1: download_button1
-    download_button2: download_button2
-    download_button3: download_button3
-    download_button4: download_button4
-    download_button5: download_button5
+    download_buttons: [download_button1, download_button2, download_button3, download_button4, download_button5]
+
+    song_images: [song_img1, song_img2, song_img3, song_img4, song_img5]
+    channel_titles: [channel_title1, channel_title2, channel_title3, channel_title4, channel_title5]
 
     Label:
         text: 'Select Video:'
@@ -485,17 +480,31 @@
         size_hint: 0.8, 0.13
         id: status_label
 
-    GridLayout:
-        pos_hint: {'x': 0.1, 'y': 0.16}
-        size_hint: 0.8, 0.68
+#:set fs_title_divider 60
+#:set fs_ctitle_divider 70
 
-        cols:2
+    GridLayout:
+
+        pos_hint: {'x': 0.05, 'y': 0.16}
+        size_hint: 0.9, 0.68
+
+        cols:4
         spacing: 10
 
+        AsyncImage:
+            id: song_img1
+            source: ''
+            size: 0, 0
         Label:
             id: song1_name
             text: ''
-            font_size: root.height / 62  if root.width > root.height else root.width / 62
+            halign: 'left'
+            font_size: root.height / fs_title_divider  if root.width > root.height else root.width / fs_title_divider
+        Label:
+            id: channel_title1
+            text: ''
+            halign: 'right'
+            font_size: root.height / fs_ctitle_divider  if root.width > root.height else root.width / fs_ctitle_divider
         Button:
             id: download_button1
             text: 'Download'
@@ -504,10 +513,20 @@
             border: 16, 16, 10, 1
             on_release: root.download_music(0)
             background_normal:''
+        AsyncImage:
+            id: song_img2
+            source: ''
+            size: 0, 0
         Label:
             id: song2_name
             text: ''
-            font_size: root.height / 62  if root.width > root.height else root.width / 62
+            halign: 'left'
+            font_size: root.height / fs_title_divider  if root.width > root.height else root.width / fs_title_divider
+        Label:
+            id: channel_title2
+            text: ''
+            halign: 'right'
+            font_size: root.height / fs_ctitle_divider  if root.width > root.height else root.width / fs_ctitle_divider
         Button:
             id: download_button2
             text: 'Download'
@@ -516,10 +535,20 @@
             border: 16, 16, 10, 1
             on_release: root.download_music(1)
             background_normal:''
+        AsyncImage:
+            id: song_img3
+            source: ''
+            size: 0, 0
         Label:
             id: song3_name
             text: ''
-            font_size: root.height / 62  if root.width > root.height else root.width / 62
+            halign: 'left'
+            font_size: root.height / fs_title_divider  if root.width > root.height else root.width / fs_title_divider
+        Label:
+            id: channel_title3
+            text: ''
+            halign: 'right'
+            font_size: root.height / fs_ctitle_divider  if root.width > root.height else root.width / fs_ctitle_divider
         Button:
             id: download_button3
             text: 'Download'
@@ -528,10 +557,20 @@
             border: 16, 16, 10, 1
             on_release: root.download_music(2)
             background_normal:''
+        AsyncImage:
+            id: song_img4
+            source: ''
+            size: 0, 0
         Label:
             id: song4_name
             text: ''
-            font_size: root.height / 62  if root.width > root.height else root.width / 62
+            halign: 'left'
+            font_size: root.height / fs_title_divider  if root.width > root.height else root.width / fs_title_divider
+        Label:
+            id: channel_title4
+            text: ''
+            halign: 'right'
+            font_size: root.height / fs_ctitle_divider  if root.width > root.height else root.width / fs_ctitle_divider
         Button:
             id: download_button4
             text: 'Download'
@@ -540,10 +579,20 @@
             border: 16, 16, 10, 1
             on_release: root.download_music(3)
             background_normal:''
+        AsyncImage:
+            id: song_img5
+            source: ''
+            size: 0, 0
         Label:
             id: song5_name
             text: ''
-            font_size: root.height / 62  if root.width > root.height else root.width / 62
+            halign: 'left'
+            font_size: root.height / fs_title_divider  if root.width > root.height else root.width / fs_title_divider
+        Label:
+            id: channel_title5
+            text: ''
+            halign: 'right'
+            font_size: root.height / fs_ctitle_divider  if root.width > root.height else root.width / fs_ctitle_divider
         Button:
             id: download_button5
             text: 'Download'

@@ -36,10 +36,10 @@ class NameDownloadLayout(Screen):
         internet_thread_end który zajmuje się załadowaniem wyników do drugiego okna i zmianom grafiki """
         DownloaderOperations().get_adress_dict_from_search(self.name_input.text, self)
 
-    def internet_thread_end(self, result_dict):
+    def internet_thread_end(self, result):
         """ wywoływane po załadowaniu słownika adresów przez InternetSearchThread zajmuje się załadowaniem następnego
         okna i przygotowaniem grafiki """
-        self.layout_manager.inst_name_result_layout.load_songs_to_grid(result_dict)
+        self.layout_manager.inst_name_result_layout.load_songs_to_grid(result)
         self.name_input.text = ''
         self.layout_manager.inst_loading_layout.hide('name_dwn_lay')
         self.layout_manager.window_manager.transition.direction = 'left'

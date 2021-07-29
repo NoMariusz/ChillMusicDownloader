@@ -10,19 +10,15 @@ class NameResultLayout(Screen):
     tamten obiekt wywoływane jest tylko przez tamten obiekt więc zawsze posiada liste z nazwami linkami do pobrania
      o góry zawiera odpowiednio zmieniającą się tabele status, po kliknięciu w guzik pobierz, guzik przsyła jako
      instancje swój numer, przez który wiemy co pobrać z lisy, po pobraniu wraca do NameDownloadLayout """
-    song1_name = ObjectProperty(None)
-    song2_name = ObjectProperty(None)
-    song3_name = ObjectProperty(None)
-    song4_name = ObjectProperty(None)
-    song5_name = ObjectProperty(None)
+    songs_labels = ObjectProperty(None)
     status_label = ObjectProperty(None)
 
     return_btn = ObjectProperty(None)
-    download_button1 = ObjectProperty(None)
-    download_button2 = ObjectProperty(None)
-    download_button3 = ObjectProperty(None)
-    download_button4 = ObjectProperty(None)
-    download_button5 = ObjectProperty(None)
+    download_buttons = ObjectProperty(None)
+
+    song_images = ObjectProperty(None)
+    channel_titles = ObjectProperty(None)
+
     dwn_lock = False
 
     def __init__(self, layout_manager, **kw):
@@ -35,34 +31,36 @@ class NameResultLayout(Screen):
             self.layout_manager.window_manager.transition.direction = 'right'
             self.layout_manager.window_manager.current = 'name_dwn_lay'
 
-    def load_songs_to_grid(self, result_dict):
-        """ służy do załadowania nazw utworów do listy pobierania, z result_dict """
+    def load_songs_to_grid(self, songs_data):
+        """ służy do załadowania nazw utworów do listy pobierania """
         self.edit_dwn_lock(False)
-        self.result_dict = result_dict
-        label_list = [self.song1_name, self.song2_name, self.song3_name, self.song4_name, self.song5_name]
-        for x, y in enumerate(result_dict.keys()):
-            label_list[x].text = y
+        self.songs_data = songs_data
 
-    def download_music(self, instance):
+        if self.songs_data is None:
+            self.load_songs_as_error()
+            return
+
+        # load data to ui
+        for index in range(5):
+            self.songs_labels[index].text = self.format_title(songs_data[index]["title"])
+            self.channel_titles[index].text = songs_data[index]["channelTitle"]
+            self.song_images[index].source = songs_data[index]["image"]["url"]
+
+    def format_title(self, text):
+        return text[0:25] + "..." if len(text) > 28 else text
+    
+    def load_songs_as_error(self):
+        for label in self.songs_labels:
+            label.text = "Error with connection"
+
+    def download_music(self, btn_index):
         """ pobiera kawałek o takim numerze w słowniku jak instance czyli numer guzika """
-        if (self.result_dict != {"Error: Can't connect": 'Error', "Error 1": 'Error',
-                                 "Error 2": 'Error', "Error 3": 'Error',
-                                 "Error 4": 'Error'}) and (not self.dwn_lock):
+        if (self.songs_data != None) and (not self.dwn_lock):
             self.edit_dwn_lock(True)
-            self.download_address = self.get_download_address(instance)
-            if self.download_address != "":
-                self.status_label.text = 'Status: Downloading %s' % (self.get_download_name(instance))
+            self.download_address = self.songs_data[btn_index]["href"]
+            if self.download_address:
+                self.status_label.text = 'Status: Downloading %s' % (self.songs_data[btn_index]["title"])
                 self.download_music1()
-
-    def get_download_address(self, btn_instance):
-        try:
-            return list(self.result_dict.values())[btn_instance]
-        except IndexError:
-            print("NameDownloadLayout: get_download_address - IndexError, self.result_dict: %s , btn_instance: %s" % (self.result_dict, btn_instance))
-            return ""
-
-    def get_download_name(self, btn_instance):
-        return list(self.result_dict.keys())[btn_instance]
 
     def download_music1(self):
         Clock.schedule_once(self.download_address1, 0)
@@ -93,16 +91,10 @@ class NameResultLayout(Screen):
         if lock:
             self.dwn_lock = True
             self.return_btn.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
-            self.download_button1.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
-            self.download_button2.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
-            self.download_button3.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
-            self.download_button4.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
-            self.download_button5.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
+            for btn in self.download_buttons:
+                btn.background_color = [0.6640625, 0.59765625, 0.6171875, 1]
         else:
             self.dwn_lock = False
             self.return_btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]
-            self.download_button1.background_color = [0.81640625, 0.3125, 0.43359375, 1]
-            self.download_button2.background_color = [0.81640625, 0.3125, 0.43359375, 1]
-            self.download_button3.background_color = [0.81640625, 0.3125, 0.43359375, 1]
-            self.download_button4.background_color = [0.81640625, 0.3125, 0.43359375, 1]
-            self.download_button5.background_color = [0.81640625, 0.3125, 0.43359375, 1]
+            for btn in self.download_buttons:
+                btn.background_color = [0.81640625, 0.3125, 0.43359375, 1]

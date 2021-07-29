@@ -212,8 +212,13 @@ def get_yt_search_results(search_string, max_results=5):
     api_service_name = "youtube"
     api_version = "v3"
 
-    youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey = DEVELOPER_KEY)
+    try:
+        youtube = googleapiclient.discovery.build(
+            api_service_name, api_version, developerKey=DEVELOPER_KEY)
+    except httplib2.error.ServerNotFoundError:
+        print("get_yt_search_results() - googleapiclient.discovery.build() \
+            httplib2.error.ServerNotFoundError")
+        return None
 
     request = youtube.search().list(
         part="snippet",
