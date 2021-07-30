@@ -43,8 +43,8 @@ class AddressDownloadLayout(Screen):
         self.address_input.text = ""
         self.edit_lock_dwn(False)
 
-    def download_error(self):
-        self.status_text.text = 'Error'
+    def download_error(self, msg=None):
+        self.status_text.text = 'Error %s' % msg
         Clock.schedule_once(self.end_thread_download, 1.2)
 
     def edit_lock_dwn(self, lock):

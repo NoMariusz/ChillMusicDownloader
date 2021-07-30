@@ -27,14 +27,14 @@ class DownloaderOperations(object):
     def make_video_url_by_id(video_id):
         return "https://www.youtube.com/watch?v=" + video_id
 
-    def download_music(self, url, name=None, cause_inst=None):
+    def download_music(self, url, name=None, cause_inst=None, save_as_last_track=False):
         """ Kompleksowo pobiera utwór i zapisuje go do bazy jako ostatnio pobrany """
-        self.ytdl_download(url, name, cause_inst)
+        self.ytdl_download(url, name, cause_inst, save_as_last_track)
 
-    def ytdl_download(self, url, name, cause_inst=None):
+    def ytdl_download(self, url, name, cause_inst=None, save_as_last_track=False):
         """ pobiera jeden utwór o podanym url """
         ydl = self.get_download_object()
-        dwn_thread = DownloadThread(ydl, url, name, cause_inst)
+        dwn_thread = DownloadThread(ydl, url, name, cause_inst, save_as_last_track)
         dwn_thread.start()
 
     def get_download_object(self):
@@ -56,30 +56,8 @@ class DownloaderOperations(object):
     def get_adress_dict_from_search(self, search_str, inst):
         """ Zwraca efekt wyszukiwania search_srt w yt jako słownik 5 pierwszych znalezionych filmików o wartościach
         nazwa: adres(krótki)"""
-        search_str_form = self.query_parse(search_str)
-        ist = InternetSearchThread(self, inst, search_str_form)
+        ist = InternetSearchThread(self, inst, search_str)
         ist.start()
-
-    @staticmethod
-    def query_parse(parse_string):
-        """ zamienia stringa na taki format jaki stosuje wyszukiwanie youtuba, aby zyskać zgodność otrzymanych wyników
-        wyszukiwania """
-        replace_dict = {
-            '#': '%23',
-            '$': '%24',
-            '@': '%40',
-            '%': '%25',
-            '&': '%26',
-            '+': '%2B',
-            '=': '%3D',
-            ',': '%2C',
-            ';': '%3B',
-            ':': '%3A',
-            ' ': '+',
-        }
-        for x, y in replace_dict.items():
-            parse_string = parse_string.replace(x, y)
-        return parse_string
 
     def get_config(self, what_key):
         return self.get_all_config()[what_key]
@@ -134,7 +112,7 @@ class InternetSearchThread(threading.Thread):
         # przygotowywuje listę z wymaganymi danymi w oparciu o informację zdobyte z api
         songs_data = []
 
-        for index in range(5):
+        for index in range(len(api_result["items"])):
             search_result = api_result["items"][index]
 
             search_result_url = DownloaderOperations.make_video_url_by_id(search_result["id"]["videoId"])
@@ -151,12 +129,13 @@ class InternetSearchThread(threading.Thread):
 
 class DownloadThread(threading.Thread):
     """ Oddzielny wątek do pobierania muzyki, odciąża layout, wywołuje się go za pomocą start() """
-    def __init__(self, ytdl_config, url, vid_name,  cause_inst, **kwargs):
+    def __init__(self, ytdl_config, url, vid_name,  cause_inst, save_as_last_track=False, **kwargs):
         super(DownloadThread, self).__init__(**kwargs)
         self.ytdl_config = ytdl_config
         self.url = url
         self.cause_inst = cause_inst
         self.video_name = vid_name
+        self.save_as_last_track = save_as_last_track
 
     def run(self):
         try:
@@ -173,6 +152,6 @@ class DownloadThread(threading.Thread):
             print('DownloadThread: Error: AttributeError %s' % e)
             self.cause_inst.download_error("This webpage is age-gated")
         else:
-            if self.video_name is not None:
+            if self.video_name is not None and self.save_as_last_track:
                 JsonOperations().save_last_track(self.video_name)
             self.cause_inst.end_thread_download()

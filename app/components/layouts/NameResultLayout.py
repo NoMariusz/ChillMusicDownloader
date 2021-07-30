@@ -41,10 +41,14 @@ class NameResultLayout(Screen):
             return
 
         # load data to ui
-        for index in range(5):
+        for index in range(0, len(songs_data)):
             self.songs_labels[index].text = self.format_title(songs_data[index]["title"])
             self.channel_titles[index].text = songs_data[index]["channelTitle"]
             self.song_images[index].source = songs_data[index]["image"]["url"]
+
+        # load rest of songs as errors
+        for index in range(len(songs_data), 5):
+            self.songs_labels[index].text = "Error with connection"
 
     def format_title(self, text):
         return text[0:25] + "..." if len(text) > 28 else text
@@ -55,7 +59,7 @@ class NameResultLayout(Screen):
 
     def download_music(self, btn_index):
         """ pobiera kawałek o takim numerze w słowniku jak instance czyli numer guzika """
-        if (self.songs_data != None) and (not self.dwn_lock):
+        if (self.songs_data != None) and (not self.dwn_lock) and (btn_index < len(self.songs_data)):
             self.edit_dwn_lock(True)
             self.downloading_obj = self.songs_data[btn_index]
             if self.downloading_obj:

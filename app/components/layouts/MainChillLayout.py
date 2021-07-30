@@ -153,14 +153,14 @@ class MainChillLayout(Screen):
     def end_thread_download(self):
         Clock.schedule_once(self.call_to_dwn_more, 0)
 
-    def download_error(self):
-        self.download_music_end(text='Error')
+    def download_error(self, msg=None):
+        self.download_music_end(text='Error %s' % msg)
 
     def download_song_with_ytdl(self):
         """ funkcja która wysyła dany kawałek zgodnie z kolejnością pobierania do objektu pobierającego"""
         url = list(self.dwn_dict.values())[self.dwn_iter - 1]
         name = list(self.dwn_dict.keys())[self.dwn_iter - 1]
-        DownloaderOperations.download_music(self.inst_do, name=name, url=url, cause_inst=self)
+        DownloaderOperations.download_music(self.inst_do, name=name, url=url, cause_inst=self, save_as_last_track=True)
 
     def make_dwn_grphs(self):
         """ tworzy pasek pobierania zgodnie ze zmiennymi towarzyszącymi pobieraniu """
