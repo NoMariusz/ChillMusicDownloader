@@ -4,6 +4,7 @@ from kivy.uix.dropdown import DropDown
 from kivy.clock import Clock
 from kivy.uix.button import Button
 
+from constants import SUPPORTED_FORMAT_TYPES
 from modules.downloader_modul import DownloaderOperations
 from modules.json_operations_modul import JsonOperations
 from modules.parse_modul import parse_yt_channel_name
@@ -66,7 +67,8 @@ class OptionsLay(Screen):
         last_track_dict = JsonOperations.load_json('../data/last_track.json')
         if new_channel not in last_track_dict.keys():
             last_track_dict[new_channel] = ''
-            JsonOperations.save_json(last_track_dict, '../data/last_track.json')
+            JsonOperations.save_json(
+                last_track_dict, '../data/last_track.json')
 
     def block_on_change_channel(self):
         """ czyści liste utworów w layoucie i blokuje pobieranie przy zmianie kanału w opcjach """
@@ -89,13 +91,15 @@ class OptionsLay(Screen):
     def make_dropdown(self):
         self.dropdown = DropDown()
         self.dropdown.dismiss_on_select = False
-        for ft_name in ['aac', 'm4a', 'mp3', 'wav']:
+        for ft_name in SUPPORTED_FORMAT_TYPES:
             dd_btn = Button(text=ft_name, size_hint_y=None, height=50, background_normal='', border=(16, 16, 16, 16),
                             background_color=[0.81640625, 0.3125, 0.43359375, 1])
             dd_btn.bind(on_release=self.release_dropdown_button)
             self.dropdown.add_widget(dd_btn)
-        self.change_file_type_dropdown_main_btn.bind(on_release=self.dropdown.open)
-        self.dropdown.bind(on_select=lambda instance, dd_main_text: setattr(self.change_file_type_dropdown_main_btn, 'text', dd_main_text))
+        self.change_file_type_dropdown_main_btn.bind(
+            on_release=self.dropdown.open)
+        self.dropdown.bind(on_select=lambda instance, dd_main_text: setattr(
+            self.change_file_type_dropdown_main_btn, 'text', dd_main_text))
         self.maked_dropdown = True
 
     def release_dropdown_button(self, instance):

@@ -4,6 +4,7 @@ from uritemplate import api
 import youtube_dl
 import threading
 
+from constants import AUDIO_FORMAT_TYPES
 from modules.json_operations_modul import JsonOperations
 from modules.yt_api_modul import \
     get_yt_api_dict, get_yt_search_results, get_video_details
@@ -34,7 +35,8 @@ class DownloaderOperations(object):
     def ytdl_download(self, url, name, cause_inst=None, save_as_last_track=False):
         """ pobiera jeden utwór o podanym url """
         ydl = self.get_download_object()
-        dwn_thread = DownloadThread(ydl, url, name, cause_inst, save_as_last_track)
+        dwn_thread = DownloadThread(
+            ydl, url, name, cause_inst, save_as_last_track)
         dwn_thread.start()
 
     def get_download_object(self):
@@ -48,8 +50,12 @@ class DownloaderOperations(object):
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': ftype,
-                'preferredquality': '192',
+                'preferredquality': '256',
             }],
+        } if ftype in AUDIO_FORMAT_TYPES else {
+            'format': ftype,
+            'outtmpl': path + '/%(title)s.%(ext)s',
+            # 'quiet': True,
         }
         return ydl_opts
 
@@ -75,7 +81,7 @@ class DownloaderOperations(object):
 
         if (result["pageInfo"]["totalResults"] < 1):
             return "Can not receive informations"
-        
+
         video_details = result["items"][0]
         return video_details["snippet"]["title"]
 
@@ -84,6 +90,7 @@ class InternetThread(threading.Thread):
     """ wątek odciążający DownloaderOperations.get_song_dict() dostaje instancje DownloaderOperations na której wykonuje
      run, oraz instrukcje layoutu do którego ma wywołać skończenie swojej pracy, przy błędzie wywołuje funkcje od błędu
      pobierania w danej instancji """
+
     def __init__(self, instance, lay_inst, **kwargs):
         super(InternetThread, self).__init__(**kwargs)
         self.instance = instance
@@ -95,6 +102,7 @@ class InternetThread(threading.Thread):
 
 class InternetSearchThread(threading.Thread):
     """ wątek robiący pracę za DownloaderOperations.get_adress_dict_from_search(), dizałanie podobne do InternetThread"""
+
     def __init__(self, instance, lay_inst, search_str, **kwargs):
         super(InternetSearchThread, self).__init__(**kwargs)
         self.instance = instance
@@ -115,7 +123,8 @@ class InternetSearchThread(threading.Thread):
         for index in range(len(api_result["items"])):
             search_result = api_result["items"][index]
 
-            search_result_url = DownloaderOperations.make_video_url_by_id(search_result["id"]["videoId"])
+            search_result_url = DownloaderOperations.make_video_url_by_id(
+                search_result["id"]["videoId"])
             song_dict = {
                 "title": search_result["snippet"]["title"],
                 "href": search_result_url,
@@ -129,6 +138,7 @@ class InternetSearchThread(threading.Thread):
 
 class DownloadThread(threading.Thread):
     """ Oddzielny wątek do pobierania muzyki, odciąża layout, wywołuje się go za pomocą start() """
+
     def __init__(self, ytdl_config, url, vid_name,  cause_inst, save_as_last_track=False, **kwargs):
         super(DownloadThread, self).__init__(**kwargs)
         self.ytdl_config = ytdl_config

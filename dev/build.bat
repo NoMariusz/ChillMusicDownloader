@@ -3,7 +3,7 @@
 :: be aware that you must prepare in ./dev folder:
 ::  - base_config.json with default config.json file
 ::  - base_last_track.json with default last_track.json file
-::  - google_api_python_client-1.9.3.dist-info folder with files necessary
+::  - google_api_python_client-1.9.3.dist-info folder with necessary files
 :: to made executalbe work from this library
 
 @echo off
