@@ -27,7 +27,7 @@ kivy-deps.sdl2==0.3.1
 Kivy-Garden==0.1.4
 more-itertools==8.8.0
 numpy==1.21.1
-oauthlib==3.1.1
+oauthlib==3.2.2
 opencv-python==4.5.3.56
 packaging==21.0
 pefile==2021.5.24
